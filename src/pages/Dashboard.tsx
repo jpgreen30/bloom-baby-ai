@@ -6,7 +6,7 @@ import { AIPredictions } from "@/components/AIPredictions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Baby, Calendar, ShoppingBag } from "lucide-react";
+import { LogOut, Baby, Calendar, ShoppingBag, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -95,6 +95,10 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold">Baby to Bloom AI</h1>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/community")}>
+              <Users className="w-4 h-4 mr-2" />
+              Community
+            </Button>
             <Button variant="outline" onClick={() => navigate("/marketplace")}>
               <ShoppingBag className="w-4 h-4 mr-2" />
               Marketplace

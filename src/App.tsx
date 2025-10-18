@@ -9,6 +9,7 @@ import BabySetup from "./pages/BabySetup";
 import Dashboard from "./pages/Dashboard";
 import Marketplace from "./pages/Marketplace";
 import CreateListing from "./pages/CreateListing";
+import SocialFeed from "./pages/SocialFeed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/marketplace/sell" element={<CreateListing />} />
+          <Route path="/community" element={<SocialFeed />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

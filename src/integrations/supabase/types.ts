@@ -19,10 +19,13 @@ export type Database = {
           birth_weight: number | null
           birthdate: string
           created_at: string
+          due_date: string | null
           gender: string | null
           id: string
+          is_pregnancy: boolean | null
           name: string
           notes: string | null
+          pregnancy_week: number | null
           updated_at: string
           user_id: string
         }
@@ -30,10 +33,13 @@ export type Database = {
           birth_weight?: number | null
           birthdate: string
           created_at?: string
+          due_date?: string | null
           gender?: string | null
           id?: string
+          is_pregnancy?: boolean | null
           name: string
           notes?: string | null
+          pregnancy_week?: number | null
           updated_at?: string
           user_id: string
         }
@@ -41,10 +47,13 @@ export type Database = {
           birth_weight?: number | null
           birthdate?: string
           created_at?: string
+          due_date?: string | null
           gender?: string | null
           id?: string
+          is_pregnancy?: boolean | null
           name?: string
           notes?: string | null
+          pregnancy_week?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -552,6 +561,111 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_posts: {
+        Row: {
+          baby_id: string | null
+          comments_count: number | null
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          likes_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          baby_id?: string | null
+          comments_count?: number | null
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          baby_id?: string | null
+          comments_count?: number | null
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_posts_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "babies"
             referencedColumns: ["id"]
           },
         ]
