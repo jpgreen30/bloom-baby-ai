@@ -106,6 +106,349 @@ export type Database = {
           },
         ]
       }
+      marketplace_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          is_primary: boolean | null
+          listing_id: string
+          order_index: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          is_primary?: boolean | null
+          listing_id: string
+          order_index?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_primary?: boolean | null
+          listing_id?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_images_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_listings: {
+        Row: {
+          age_range: string | null
+          brand: string | null
+          category: string
+          condition: string
+          created_at: string
+          description: string
+          favorited_count: number | null
+          featured: boolean | null
+          id: string
+          local_pickup: boolean | null
+          location_city: string | null
+          location_state: string | null
+          original_price: number | null
+          price: number
+          seller_id: string
+          shipping_available: boolean | null
+          size: string | null
+          sold_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          age_range?: string | null
+          brand?: string | null
+          category: string
+          condition: string
+          created_at?: string
+          description: string
+          favorited_count?: number | null
+          featured?: boolean | null
+          id?: string
+          local_pickup?: boolean | null
+          location_city?: string | null
+          location_state?: string | null
+          original_price?: number | null
+          price: number
+          seller_id: string
+          shipping_available?: boolean | null
+          size?: string | null
+          sold_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          age_range?: string | null
+          brand?: string | null
+          category?: string
+          condition?: string
+          created_at?: string
+          description?: string
+          favorited_count?: number | null
+          featured?: boolean | null
+          id?: string
+          local_pickup?: boolean | null
+          location_city?: string | null
+          location_state?: string | null
+          original_price?: number | null
+          price?: number
+          seller_id?: string
+          shipping_available?: boolean | null
+          size?: string | null
+          sold_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_messages: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          message: string
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          message: string
+          read_at?: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          message?: string
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          review_type: string
+          reviewee_id: string
+          reviewer_id: string
+          transaction_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          review_type: string
+          reviewee_id: string
+          reviewer_id: string
+          transaction_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          review_type?: string
+          reviewee_id?: string
+          reviewer_id?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_reviews_reviewee_id_fkey"
+            columns: ["reviewee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_reviews_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_transactions: {
+        Row: {
+          amount_seller: number
+          amount_total: number
+          buyer_confirmed_at: string | null
+          buyer_id: string
+          created_at: string
+          delivered_at: string | null
+          id: string
+          listing_id: string
+          platform_commission: number
+          seller_id: string
+          shipping_method: string | null
+          status: string
+          stripe_fee: number | null
+          stripe_payment_intent_id: string | null
+          stripe_transfer_id: string | null
+          tracking_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_seller: number
+          amount_total: number
+          buyer_confirmed_at?: string | null
+          buyer_id: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          listing_id: string
+          platform_commission: number
+          seller_id: string
+          shipping_method?: string | null
+          status?: string
+          stripe_fee?: number | null
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_seller?: number
+          amount_total?: number
+          buyer_confirmed_at?: string | null
+          buyer_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          listing_id?: string
+          platform_commission?: number
+          seller_id?: string
+          shipping_method?: string | null
+          status?: string
+          stripe_fee?: number | null
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_transactions_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_transactions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_transactions_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       milestones: {
         Row: {
           age_range_weeks: string | null
@@ -162,6 +505,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      seller_accounts: {
+        Row: {
+          created_at: string
+          id: string
+          onboarding_completed: boolean | null
+          payouts_enabled: boolean | null
+          rating_average: number | null
+          rating_count: number | null
+          stripe_account_id: string | null
+          total_revenue: number | null
+          total_sales: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          onboarding_completed?: boolean | null
+          payouts_enabled?: boolean | null
+          rating_average?: number | null
+          rating_count?: number | null
+          stripe_account_id?: string | null
+          total_revenue?: number | null
+          total_sales?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          onboarding_completed?: boolean | null
+          payouts_enabled?: boolean | null
+          rating_average?: number | null
+          rating_count?: number | null
+          stripe_account_id?: string | null
+          total_revenue?: number | null
+          total_sales?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
