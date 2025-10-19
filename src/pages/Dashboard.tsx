@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MilestoneCard } from "@/components/MilestoneCard";
 import { AIPredictions } from "@/components/AIPredictions";
 import ProductRecommendations from "@/components/ProductRecommendations";
-import { BabyDevelopment3D } from "@/components/BabyDevelopment3D";
+import { BabyDevelopmentImage } from "@/components/BabyDevelopmentImage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -131,7 +131,7 @@ const Dashboard = () => {
         </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <BabyDevelopment3D
+          <BabyDevelopmentImage
             babyName={baby.name}
             babyAge={age}
             isPregnancy={baby.is_pregnancy}
