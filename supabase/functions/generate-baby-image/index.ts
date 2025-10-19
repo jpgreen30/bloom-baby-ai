@@ -12,12 +12,20 @@ serve(async (req) => {
   }
 
   try {
-    const { isPregnancy, pregnancyWeek, ageMonths, babyName } = await req.json();
+    const { isPregnancy, pregnancyWeek, ageMonths, babyName, babyId, forceRegenerate } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
+
+    // Initialize Supabase client for caching
+    const supabase = createClient(
+      SUPABASE_URL!,
+      SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Generate appropriate prompt based on pregnancy or baby age
     let prompt = '';
@@ -45,7 +53,33 @@ serve(async (req) => {
       }
     }
 
-    console.log('Generating image with prompt:', prompt);
+    // Check cache first (unless forceRegenerate is true)
+    if (babyId && !forceRegenerate) {
+      const { data: cached } = await supabase
+        .from('generated_images')
+        .select('image_data, prompt')
+        .eq('baby_id', babyId)
+        .eq('cache_key', cacheKey)
+        .maybeSingle();
+
+      if (cached) {
+        console.log('Cache hit for:', cacheKey);
+        return new Response(
+          JSON.stringify({ 
+            imageUrl: cached.image_data,
+            cacheKey,
+            prompt: cached.prompt,
+            cached: true
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200 
+          }
+        );
+      }
+    }
+
+    console.log('Cache miss, generating image with prompt:', prompt);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -80,11 +114,27 @@ serve(async (req) => {
 
     console.log('Image generated successfully');
 
+    // Save to cache if babyId is provided
+    if (babyId) {
+      await supabase
+        .from('generated_images')
+        .upsert({
+          baby_id: babyId,
+          cache_key: cacheKey,
+          image_data: imageUrl,
+          prompt
+        }, {
+          onConflict: 'baby_id,cache_key'
+        });
+      console.log('Image cached for future use');
+    }
+
     return new Response(
       JSON.stringify({ 
         imageUrl,
         cacheKey,
-        prompt 
+        prompt,
+        cached: false
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

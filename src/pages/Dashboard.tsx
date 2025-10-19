@@ -155,6 +155,7 @@ const Dashboard = () => {
             babyAge={age}
             isPregnancy={baby.is_pregnancy}
             pregnancyWeek={baby.is_pregnancy ? age.pregnancyWeek : undefined}
+            babyId={baby.id}
           />
           <AIPredictions
             babyName={baby.name}

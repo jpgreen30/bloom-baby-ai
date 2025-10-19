@@ -12,6 +12,7 @@ interface BabyDevelopmentImageProps {
   babyAge: { months: number; weeks: number; days: number };
   isPregnancy: boolean;
   pregnancyWeek?: number;
+  babyId: string;
 }
 
 export const BabyDevelopmentImage = ({
@@ -19,6 +20,7 @@ export const BabyDevelopmentImage = ({
   babyAge,
   isPregnancy,
   pregnancyWeek,
+  babyId,
 }: BabyDevelopmentImageProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,6 +37,8 @@ export const BabyDevelopmentImage = ({
           pregnancyWeek: isPregnancy ? pregnancyWeek : undefined,
           ageMonths: !isPregnancy ? babyAge.months : undefined,
           babyName,
+          babyId,
+          forceRegenerate: false,
         }
       });
 

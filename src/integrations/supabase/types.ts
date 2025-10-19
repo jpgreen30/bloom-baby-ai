@@ -121,6 +121,41 @@ export type Database = {
           },
         ]
       }
+      generated_images: {
+        Row: {
+          baby_id: string
+          cache_key: string
+          created_at: string | null
+          id: string
+          image_data: string
+          prompt: string | null
+        }
+        Insert: {
+          baby_id: string
+          cache_key: string
+          created_at?: string | null
+          id?: string
+          image_data: string
+          prompt?: string | null
+        }
+        Update: {
+          baby_id?: string
+          cache_key?: string
+          created_at?: string | null
+          id?: string
+          image_data?: string
+          prompt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_images_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "babies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_favorites: {
         Row: {
           created_at: string
