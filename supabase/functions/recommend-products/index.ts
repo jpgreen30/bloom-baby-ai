@@ -144,31 +144,41 @@ Urgency: "high" (needed now), "medium" (needed in 2-4 weeks), "low" (nice to hav
       throw new Error('Invalid AI response format');
     }
 
-    // Store recommendations in database
-    const recommendationsToInsert = recommendations.map((rec: any) => ({
+    // Filter out recommendations with invalid listing IDs and enrich with listing details
+    const enrichedRecommendations = recommendations
+      .map((rec: any) => {
+        const listing = listings?.find(l => l.id === rec.listing_id);
+        if (!listing) {
+          console.warn(`Listing not found for ID: ${rec.listing_id}`);
+          return null;
+        }
+        return {
+          ...rec,
+          listing,
+        };
+      })
+      .filter((rec: any) => rec !== null); // Remove invalid recommendations
+
+    // Only insert valid recommendations
+    const recommendationsToInsert = enrichedRecommendations.map((rec: any) => ({
       user_id: user.id,
       listing_id: rec.listing_id,
       relevance_score: rec.relevance_score,
       reason: rec.reason,
-      urgency: rec.urgency || 'normal',
+      urgency: rec.urgency === 'high' || rec.urgency === 'medium' || rec.urgency === 'low' 
+        ? rec.urgency 
+        : 'medium', // Default to 'medium' if invalid
     }));
 
-    const { error: insertError } = await supabase
-      .from('product_recommendations')
-      .insert(recommendationsToInsert);
+    if (recommendationsToInsert.length > 0) {
+      const { error: insertError } = await supabase
+        .from('product_recommendations')
+        .insert(recommendationsToInsert);
 
-    if (insertError) {
-      console.error('Error inserting recommendations:', insertError);
+      if (insertError) {
+        console.error('Error inserting recommendations:', insertError);
+      }
     }
-
-    // Return recommendations with listing details
-    const enrichedRecommendations = recommendations.map((rec: any) => {
-      const listing = listings?.find(l => l.id === rec.listing_id);
-      return {
-        ...rec,
-        listing,
-      };
-    });
 
     return new Response(JSON.stringify({ recommendations: enrichedRecommendations }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

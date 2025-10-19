@@ -28,13 +28,19 @@ const RecommendationCard = ({
 }: RecommendationCardProps) => {
   const navigate = useNavigate();
 
+  // Safety check: if listing is undefined, don't render
+  if (!listing) {
+    console.warn('RecommendationCard received undefined listing');
+    return null;
+  }
+
   const urgencyConfig = {
     high: { label: 'Needed Now', color: 'destructive' as const, icon: Clock },
     medium: { label: 'Needed Soon', color: 'default' as const, icon: TrendingUp },
     low: { label: 'Nice to Have', color: 'secondary' as const, icon: Sparkles },
   };
 
-  const config = urgencyConfig[urgency as keyof typeof urgencyConfig] || urgencyConfig.low;
+  const config = urgencyConfig[urgency as keyof typeof urgencyConfig] || urgencyConfig.medium;
   const UrgencyIcon = config.icon;
 
   const handleViewProduct = () => {
