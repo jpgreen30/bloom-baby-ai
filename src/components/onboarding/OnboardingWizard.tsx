@@ -8,6 +8,7 @@ import { OnboardingStep3 } from "./OnboardingStep3";
 import { OnboardingStep4 } from "./OnboardingStep4";
 import { OnboardingStep5 } from "./OnboardingStep5";
 import { toast } from "sonner";
+import { Logo } from "@/components/ui/Logo";
 
 export const OnboardingWizard = () => {
   const navigate = useNavigate();
@@ -236,6 +237,11 @@ export const OnboardingWizard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/20 via-background to-accent/20 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <Logo size="lg" clickable={false} />
+        </div>
+
         {currentStep < 5 && (
           <div className="mb-6 space-y-2">
             <div className="flex justify-between items-center text-sm text-muted-foreground">

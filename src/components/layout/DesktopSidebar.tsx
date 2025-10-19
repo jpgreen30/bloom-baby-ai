@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 
 interface DesktopSidebarProps {
   currentPath: string;
@@ -49,13 +50,16 @@ const DesktopSidebar = ({ currentPath }: DesktopSidebarProps) => {
       )}
     >
       <div className="flex flex-col h-full">
-        {/* Toggle Button */}
-        <div className="flex justify-end p-2 border-b border-sidebar-border">
+        {/* Logo & Toggle Section */}
+        <div className="flex items-center justify-between p-3 border-b border-sidebar-border">
+          {!collapsed && (
+            <Logo size="sm" to="/dashboard" />
+          )}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setCollapsed(!collapsed)}
-            className="h-8 w-8"
+            className="h-8 w-8 ml-auto"
           >
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />

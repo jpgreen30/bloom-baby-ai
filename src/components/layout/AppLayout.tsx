@@ -6,6 +6,7 @@ import MobileNav from "./MobileNav";
 import DesktopSidebar from "./DesktopSidebar";
 import { Bell, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/Logo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +58,12 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container flex h-14 items-center justify-between px-4">
+          <div className="flex items-center gap-4">
+            <Logo size={isMobile ? "sm" : "md"} to="/dashboard" />
+            {!isMobile && (
+              <div className="h-6 w-px bg-border" />
+            )}
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="gap-2">

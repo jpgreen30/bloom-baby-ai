@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Baby } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 export const AuthForm = () => {
   const [email, setEmail] = useState("");
@@ -69,10 +69,9 @@ export const AuthForm = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 via-background to-accent/20 p-4">
       <Card className="w-full max-w-md shadow-soft">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-glow">
-            <Baby className="w-8 h-8 text-primary-foreground" />
+          <div className="mx-auto">
+            <Logo size="xl" clickable={false} />
           </div>
-          <CardTitle className="text-3xl">Baby to Bloom AI</CardTitle>
           <CardDescription>
             Welcome back! Track your baby's journey
           </CardDescription>
