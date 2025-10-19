@@ -5,10 +5,9 @@ import { MilestoneCard } from "@/components/MilestoneCard";
 import { AIPredictions } from "@/components/AIPredictions";
 import ProductRecommendations from "@/components/ProductRecommendations";
 import { BabyDevelopmentImage } from "@/components/BabyDevelopmentImage";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Baby, Calendar, ShoppingBag, Users } from "lucide-react";
+import { Baby, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -108,97 +107,72 @@ const Dashboard = () => {
       ).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Baby className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold">Baby to Bloom AI</h1>
+    <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
+      <Card className="bg-gradient-hero text-primary-foreground">
+        <CardHeader>
+          <CardTitle className="text-3xl flex items-center gap-2">
+            <Baby className="w-8 h-8" />
+            {baby.name}'s Journey
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 text-lg">
+            <Calendar className="w-5 h-5" />
+            {baby.is_pregnancy ? `Week ${age.pregnancyWeek} of pregnancy` : `${age.months} months (${age.weeks} weeks old)`}
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/community")}>
-              <Users className="w-4 h-4 mr-2" />
-              Community
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/marketplace")}>
-              <ShoppingBag className="w-4 h-4 mr-2" />
-              Marketplace
-            </Button>
-            <Button variant="outline" onClick={() => supabase.auth.signOut()}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
+          <p className="mt-2 opacity-90">{completedMilestones.length} milestones achieved! 🎉</p>
+        </CardContent>
+      </Card>
 
-      <main className="container mx-auto px-4 py-8 space-y-6">
-        <Card className="bg-gradient-hero text-primary-foreground">
-          <CardHeader>
-            <CardTitle className="text-3xl flex items-center gap-2">
-              <Baby className="w-8 h-8" />
-              {baby.name}'s Journey
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2 text-lg">
-              <Calendar className="w-5 h-5" />
-              {baby.is_pregnancy ? `Week ${age.pregnancyWeek} of pregnancy` : `${age.months} months (${age.weeks} weeks old)`}
-            </div>
-            <p className="mt-2 opacity-90">{completedMilestones.length} milestones achieved! 🎉</p>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <BabyDevelopmentImage
-            babyName={baby.name}
-            babyAge={age}
-            isPregnancy={baby.is_pregnancy}
-            pregnancyWeek={baby.is_pregnancy ? age.pregnancyWeek : undefined}
-            babyId={baby.id}
-          />
-          <AIPredictions
-            babyName={baby.name}
-            babyAge={age}
-            completedMilestones={completedMilestones}
-            upcomingMilestones={upcomingMilestones}
-          />
-        </div>
-
-        <ProductRecommendations
+      <div className="grid gap-6 md:grid-cols-2">
+        <BabyDevelopmentImage
           babyName={baby.name}
-          babyAge={`${age.months} months (${age.weeks} weeks)`}
+          babyAge={age}
           isPregnancy={baby.is_pregnancy}
-          pregnancyWeek={baby.pregnancy_week}
-          completedMilestones={completedMilestones.map((m: any) => m.title)}
-          upcomingMilestones={upcomingMilestones.map((m: any) => m.title)}
+          pregnancyWeek={baby.is_pregnancy ? age.pregnancyWeek : undefined}
+          babyId={baby.id}
         />
+        <AIPredictions
+          babyName={baby.name}
+          babyAge={age}
+          completedMilestones={completedMilestones}
+          upcomingMilestones={upcomingMilestones}
+        />
+      </div>
 
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="motor">Motor</TabsTrigger>
-            <TabsTrigger value="cognitive">Cognitive</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
-            <TabsTrigger value="language">Language</TabsTrigger>
-          </TabsList>
-          {["all", "motor", "cognitive", "social", "language"].map(category => (
-            <TabsContent key={category} value={category} className="space-y-4">
-              {filterMilestones(category).map(milestone => {
-                const babyMilestone = babyMilestones.find(bm => bm.milestone_id === milestone.id);
-                return (
-                  <MilestoneCard
-                    key={milestone.id}
-                    milestone={milestone}
-                    status={babyMilestone?.status}
-                    onStatusChange={(status) => updateMilestoneStatus(milestone.id, status)}
-                  />
-                );
-              })}
-            </TabsContent>
-          ))}
-        </Tabs>
-      </main>
+      <ProductRecommendations
+        babyName={baby.name}
+        babyAge={`${age.months} months (${age.weeks} weeks)`}
+        isPregnancy={baby.is_pregnancy}
+        pregnancyWeek={baby.pregnancy_week}
+        completedMilestones={completedMilestones.map((m: any) => m.title)}
+        upcomingMilestones={upcomingMilestones.map((m: any) => m.title)}
+      />
+
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="motor">Motor</TabsTrigger>
+          <TabsTrigger value="cognitive">Cognitive</TabsTrigger>
+          <TabsTrigger value="social">Social</TabsTrigger>
+          <TabsTrigger value="language">Language</TabsTrigger>
+        </TabsList>
+        {["all", "motor", "cognitive", "social", "language"].map(category => (
+          <TabsContent key={category} value={category} className="space-y-4">
+            {filterMilestones(category).map(milestone => {
+              const babyMilestone = babyMilestones.find(bm => bm.milestone_id === milestone.id);
+              return (
+                <MilestoneCard
+                  key={milestone.id}
+                  milestone={milestone}
+                  status={babyMilestone?.status}
+                  onStatusChange={(status) => updateMilestoneStatus(milestone.id, status)}
+                />
+              );
+            })}
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 };

@@ -50,34 +50,29 @@ const Marketplace = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold">Baby Marketplace</h1>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/dashboard")}>
-              Back to Dashboard
-            </Button>
-            {user && (
-              <Button onClick={() => navigate("/marketplace/sell")}>
-                <Plus className="w-4 h-4 mr-2" />
-                Sell Item
-              </Button>
-            )}
-          </div>
+    <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <ShoppingBag className="w-8 h-8 text-primary" />
+            Baby Marketplace
+          </h1>
+          <p className="text-muted-foreground mt-1">Buy and sell gently used baby items</p>
         </div>
-      </header>
+        {user && (
+          <Button onClick={() => navigate("/marketplace/sell")}>
+            <Plus className="w-4 h-4 mr-2" />
+            Sell Item
+          </Button>
+        )}
+      </div>
 
-      <main className="container mx-auto px-4 py-8 space-y-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-          <Input
-            placeholder="Search for baby items..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+        <Input
+          placeholder="Search for baby items..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -138,7 +133,6 @@ const Marketplace = () => {
             <p className="text-muted-foreground">Try adjusting your search or be the first to list an item!</p>
           </Card>
         )}
-      </main>
     </div>
   );
 };

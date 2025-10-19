@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import AppLayout from "./components/layout/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -10,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import Marketplace from "./pages/Marketplace";
 import CreateListing from "./pages/CreateListing";
 import Community from "./pages/Community";
+import Appointments from "./pages/Appointments";
+import Premium from "./pages/Premium";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,10 +27,12 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/marketplace/sell" element={<CreateListing />} />
-          <Route path="/community" element={<Community />} />
+          <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+          <Route path="/appointments" element={<AppLayout><Appointments /></AppLayout>} />
+          <Route path="/marketplace" element={<AppLayout><Marketplace /></AppLayout>} />
+          <Route path="/marketplace/sell" element={<AppLayout><CreateListing /></AppLayout>} />
+          <Route path="/community" element={<AppLayout><Community /></AppLayout>} />
+          <Route path="/premium" element={<AppLayout><Premium /></AppLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

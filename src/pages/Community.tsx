@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Users, Heart, MessageCircle, Send, ArrowLeft, Image as ImageIcon, Trash2, Edit, X } from "lucide-react";
+import { Users, Heart, MessageCircle, Send, Image as ImageIcon, Trash2, Edit, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -260,24 +260,15 @@ const Community = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold">Community</h1>
-          </div>
-          <Button variant="outline" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
-        <Card>
-          <CardHeader>
-            <div className="flex gap-3">
+    <div className="container mx-auto px-4 py-6 max-w-2xl space-y-6">
+      <div className="flex items-center gap-2 mb-2">
+        <Users className="w-8 h-8 text-primary" />
+        <h1 className="text-3xl font-bold">Community</h1>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <div className="flex gap-3">
               <Avatar>
                 <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
               </Avatar>
@@ -529,8 +520,7 @@ const Community = () => {
               <p className="text-muted-foreground">Be the first to share your journey!</p>
             </Card>
           )}
-        </div>
-      </main>
+      </div>
     </div>
   );
 };
