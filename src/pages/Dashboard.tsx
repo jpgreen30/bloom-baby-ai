@@ -65,13 +65,30 @@ const Dashboard = () => {
     toast.success("Milestone updated!");
   };
 
+  const getPregnancyInfo = () => {
+    if (baby.due_date) {
+      const dueDate = new Date(baby.due_date);
+      const today = new Date();
+      const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const weeksUntilDue = Math.ceil(daysUntilDue / 7);
+      const currentWeek = Math.max(1, Math.min(42, 40 - weeksUntilDue));
+      return currentWeek;
+    }
+    return baby.pregnancy_week || 1;
+  };
+
   const getAge = () => {
+    if (baby.is_pregnancy) {
+      const pregnancyWeek = getPregnancyInfo();
+      return { months: 0, weeks: 0, days: 0, isPregnancy: true, pregnancyWeek };
+    }
+    
     const birthDate = new Date(baby.birthdate);
     const today = new Date();
     const ageInDays = Math.floor((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
     const months = Math.floor(ageInDays / 30);
     const weeks = Math.floor(ageInDays / 7);
-    return { months, weeks, days: ageInDays };
+    return { months, weeks, days: ageInDays, isPregnancy: false, pregnancyWeek: 0 };
   };
 
   const filterMilestones = (category: string) => {
@@ -84,9 +101,11 @@ const Dashboard = () => {
   const completedMilestones = milestones.filter(m => 
     babyMilestones.find(bm => bm.milestone_id === m.id && bm.status === "achieved")
   );
-  const upcomingMilestones = milestones.filter(m => 
-    !babyMilestones.find(bm => bm.milestone_id === m.id) && m.typical_age_weeks >= age.weeks
-  ).slice(0, 5);
+  const upcomingMilestones = baby.is_pregnancy 
+    ? milestones.filter(m => m.typical_age_weeks <= 0).slice(0, 5)
+    : milestones.filter(m => 
+        !babyMilestones.find(bm => bm.milestone_id === m.id) && m.typical_age_weeks >= age.weeks
+      ).slice(0, 5);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
@@ -124,7 +143,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="flex items-center gap-2 text-lg">
               <Calendar className="w-5 h-5" />
-              {age.months} months ({age.weeks} weeks old)
+              {baby.is_pregnancy ? `Week ${age.pregnancyWeek} of pregnancy` : `${age.months} months (${age.weeks} weeks old)`}
             </div>
             <p className="mt-2 opacity-90">{completedMilestones.length} milestones achieved! 🎉</p>
           </CardContent>
@@ -135,7 +154,7 @@ const Dashboard = () => {
             babyName={baby.name}
             babyAge={age}
             isPregnancy={baby.is_pregnancy}
-            pregnancyWeek={baby.pregnancy_week}
+            pregnancyWeek={baby.is_pregnancy ? age.pregnancyWeek : undefined}
           />
           <AIPredictions
             babyName={baby.name}

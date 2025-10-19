@@ -148,7 +148,19 @@ export const OnboardingWizard = () => {
           babyData.birthdate = null;
           babyData.is_pregnancy = true;
           babyData.due_date = data.dueDate || null;
-          babyData.pregnancy_week = data.pregnancyWeek ? parseInt(data.pregnancyWeek) : null;
+          
+          // Calculate pregnancy week from due date if not provided
+          if (data.pregnancyWeek) {
+            babyData.pregnancy_week = parseInt(data.pregnancyWeek);
+          } else if (data.dueDate) {
+            const dueDate = new Date(data.dueDate);
+            const today = new Date();
+            const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            const weeksUntilDue = Math.ceil(daysUntilDue / 7);
+            babyData.pregnancy_week = Math.max(1, Math.min(42, 40 - weeksUntilDue));
+          } else {
+            babyData.pregnancy_week = null;
+          }
         }
 
         const { error } = await supabase.from("babies").insert(babyData);
