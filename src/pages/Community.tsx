@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Users, Heart, MessageCircle, Send, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Users, Heart, MessageCircle, Send, ArrowLeft, Image as ImageIcon, Trash2, Edit, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -19,6 +20,13 @@ const Community = () => {
   const [user, setUser] = useState<any>(null);
   const [baby, setBaby] = useState<any>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [comments, setComments] = useState<Record<string, any[]>>({});
+  const [newComment, setNewComment] = useState<Record<string, string>>({});
+  const [editingPost, setEditingPost] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
 
   useEffect(() => {
     loadData();
@@ -62,6 +70,7 @@ const Community = () => {
       .select(`
         *,
         babies(name, birthdate, is_pregnancy, pregnancy_week),
+        profiles!social_posts_user_id_fkey(display_name, email),
         social_likes(user_id),
         social_comments(count)
       `)
@@ -70,20 +79,49 @@ const Community = () => {
     setPosts(postsData || []);
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handlePost = async () => {
     if (!newPost.trim()) return;
     
     setSubmitting(true);
     try {
+      let imageUrl = null;
+
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('social-posts')
+          .upload(fileName, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('social-posts')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+      }
+
       const { error } = await supabase.from("social_posts").insert({
         user_id: user.id,
         baby_id: baby?.id,
         content: newPost,
+        image_url: imageUrl,
       });
 
       if (error) throw error;
       
       setNewPost("");
+      setImageFile(null);
+      setImagePreview("");
       toast.success("Posted successfully!");
       loadPosts();
     } catch (error: any) {
@@ -100,6 +138,90 @@ const Community = () => {
       await supabase.from("social_likes").insert({ post_id: postId, user_id: user.id });
     }
     loadPosts();
+  };
+
+  const loadComments = async (postId: string) => {
+    const { data } = await supabase
+      .from("social_comments")
+      .select("*, profiles!social_comments_user_id_fkey(display_name, email)")
+      .eq("post_id", postId)
+      .order("created_at", { ascending: true });
+    
+    setComments(prev => ({ ...prev, [postId]: data || [] }));
+  };
+
+  const toggleComments = async (postId: string) => {
+    const newExpanded = new Set(expandedComments);
+    if (newExpanded.has(postId)) {
+      newExpanded.delete(postId);
+    } else {
+      newExpanded.add(postId);
+      if (!comments[postId]) {
+        await loadComments(postId);
+      }
+    }
+    setExpandedComments(newExpanded);
+  };
+
+  const handleComment = async (postId: string) => {
+    const content = newComment[postId]?.trim();
+    if (!content) return;
+
+    try {
+      const { error } = await supabase.from("social_comments").insert({
+        post_id: postId,
+        user_id: user.id,
+        content,
+      });
+
+      if (error) throw error;
+
+      setNewComment(prev => ({ ...prev, [postId]: "" }));
+      await loadComments(postId);
+      loadPosts();
+      toast.success("Comment added!");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDeletePost = async (postId: string, imageUrl?: string) => {
+    try {
+      if (imageUrl) {
+        const path = imageUrl.split('/social-posts/')[1];
+        if (path) {
+          await supabase.storage.from('social-posts').remove([path]);
+        }
+      }
+
+      const { error } = await supabase.from("social_posts").delete().eq("id", postId);
+      if (error) throw error;
+
+      toast.success("Post deleted!");
+      loadPosts();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleEditPost = async (postId: string) => {
+    if (!editContent.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from("social_posts")
+        .update({ content: editContent })
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      setEditingPost(null);
+      setEditContent("");
+      toast.success("Post updated!");
+      loadPosts();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   const getStageLabel = (post: any) => {
@@ -167,7 +289,38 @@ const Community = () => {
                   rows={3}
                   className="resize-none"
                 />
-                <div className="flex justify-end mt-2">
+                {imagePreview && (
+                  <div className="relative mt-2">
+                    <img src={imagePreview} alt="Preview" className="rounded-lg max-h-48 w-auto" />
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      className="absolute top-2 right-2"
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview("");
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+                <div className="flex justify-between items-center mt-2">
+                  <label htmlFor="image-upload">
+                    <Button variant="outline" size="sm" type="button" asChild>
+                      <span className="cursor-pointer">
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Add Photo
+                      </span>
+                    </Button>
+                    <Input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                  </label>
                   <Button onClick={handlePost} disabled={submitting || !newPost.trim()}>
                     <Send className="w-4 h-4 mr-2" />
                     {submitting ? "Posting..." : "Post"}
@@ -212,6 +365,9 @@ const Community = () => {
         <div className="space-y-4">
           {filteredPosts.map((post) => {
             const isLiked = post.social_likes?.some((like: any) => like.user_id === user.id);
+            const isOwner = post.user_id === user.id;
+            const profile = post.profiles;
+            const displayName = profile?.display_name || profile?.email?.split('@')[0] || "Anonymous";
             
             return (
               <Card key={post.id}>
@@ -219,26 +375,76 @@ const Community = () => {
                   <div className="flex items-start gap-3">
                     <Avatar>
                       <AvatarFallback>
-                        {post.babies?.name?.[0] || "M"}
+                        {displayName[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-semibold">{post.babies?.name || "Anonymous Mom"}</p>
+                          <p className="font-semibold">{displayName}</p>
                           <Badge variant="secondary" className="text-xs">
                             {getStageLabel(post)}
                           </Badge>
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                          </span>
+                          {isOwner && (
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  setEditingPost(post.id);
+                                  setEditContent(post.content);
+                                }}
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive"
+                                onClick={() => handleDeletePost(post.id, post.image_url)}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="whitespace-pre-wrap mb-4">{post.content}</p>
+                  {editingPost === post.id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        rows={3}
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => handleEditPost(post.id)}>
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingPost(null);
+                            setEditContent("");
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap mb-4">{post.content}</p>
+                  )}
                   {post.image_url && (
                     <img 
                       src={post.image_url} 
@@ -256,11 +462,61 @@ const Community = () => {
                       <Heart className={`w-4 h-4 mr-1 ${isLiked ? "fill-current" : ""}`} />
                       {post.likes_count || 0}
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleComments(post.id)}
+                    >
                       <MessageCircle className="w-4 h-4 mr-1" />
                       {post.comments_count || 0}
                     </Button>
                   </div>
+
+                  {expandedComments.has(post.id) && (
+                    <div className="mt-4 space-y-3 border-t pt-3">
+                      {comments[post.id]?.map((comment) => {
+                        const commentProfile = comment.profiles;
+                        const commentDisplayName = commentProfile?.display_name || commentProfile?.email?.split('@')[0] || "Anonymous";
+                        
+                        return (
+                          <div key={comment.id} className="flex gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="text-xs">
+                                {commentDisplayName[0].toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 bg-muted rounded-lg p-2">
+                              <p className="text-sm font-semibold">{commentDisplayName}</p>
+                              <p className="text-sm">{comment.content}</p>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Write a comment..."
+                          value={newComment[post.id] || ""}
+                          onChange={(e) => setNewComment(prev => ({ ...prev, [post.id]: e.target.value }))}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleComment(post.id);
+                            }
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => handleComment(post.id)}
+                          disabled={!newComment[post.id]?.trim()}
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
