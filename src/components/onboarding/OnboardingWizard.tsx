@@ -144,16 +144,23 @@ export const OnboardingWizard = () => {
           babyData.birth_weight = data.birthWeight ? parseFloat(data.birthWeight) : null;
           babyData.is_pregnancy = false;
         } else {
+          // For pregnancies, explicitly set birthdate as null
+          babyData.birthdate = null;
           babyData.is_pregnancy = true;
           babyData.due_date = data.dueDate || null;
           babyData.pregnancy_week = data.pregnancyWeek ? parseInt(data.pregnancyWeek) : null;
         }
 
         const { error } = await supabase.from("babies").insert(babyData);
-        if (error) throw error;
+        
+        if (error) {
+          console.error("Database error saving baby:", error);
+          throw new Error("Unable to save baby information. Please try again.");
+        }
 
         await saveProgress(4, {});
       } catch (error: any) {
+        console.error("Error in handleStep3Complete:", error);
         toast.error(error.message || "Failed to save baby information");
         return;
       }

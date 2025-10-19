@@ -17,7 +17,7 @@ export type Database = {
       babies: {
         Row: {
           birth_weight: number | null
-          birthdate: string
+          birthdate: string | null
           created_at: string
           due_date: string | null
           gender: string | null
@@ -33,7 +33,7 @@ export type Database = {
         }
         Insert: {
           birth_weight?: number | null
-          birthdate: string
+          birthdate?: string | null
           created_at?: string
           due_date?: string | null
           gender?: string | null
@@ -49,7 +49,7 @@ export type Database = {
         }
         Update: {
           birth_weight?: number | null
-          birthdate?: string
+          birthdate?: string | null
           created_at?: string
           due_date?: string | null
           gender?: string | null
