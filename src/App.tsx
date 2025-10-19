@@ -17,27 +17,29 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
-          <Route path="/appointments" element={<AppLayout><Appointments /></AppLayout>} />
-          <Route path="/marketplace" element={<AppLayout><Marketplace /></AppLayout>} />
-          <Route path="/marketplace/sell" element={<AppLayout><CreateListing /></AppLayout>} />
-          <Route path="/community" element={<AppLayout><Community /></AppLayout>} />
-          <Route path="/premium" element={<AppLayout><Premium /></AppLayout>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+            <Route path="/appointments" element={<AppLayout><Appointments /></AppLayout>} />
+            <Route path="/marketplace" element={<AppLayout><Marketplace /></AppLayout>} />
+            <Route path="/marketplace/sell" element={<AppLayout><CreateListing /></AppLayout>} />
+            <Route path="/community" element={<AppLayout><Community /></AppLayout>} />
+            <Route path="/premium" element={<AppLayout><Premium /></AppLayout>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
