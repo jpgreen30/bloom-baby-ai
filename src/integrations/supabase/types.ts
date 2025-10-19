@@ -558,22 +558,40 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string
+          first_name: string | null
           id: string
+          last_name: string | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          phone: string | null
           updated_at: string
+          zip_code: string | null
         }
         Insert: {
           created_at?: string
           display_name?: string | null
           email: string
+          first_name?: string | null
           id: string
+          last_name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          phone?: string | null
           updated_at?: string
+          zip_code?: string | null
         }
         Update: {
           created_at?: string
           display_name?: string | null
           email?: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          phone?: string | null
           updated_at?: string
+          zip_code?: string | null
         }
         Relationships: []
       }
@@ -728,6 +746,41 @@ export type Database = {
             columns: ["baby_id"]
             isOneToOne: false
             referencedRelation: "babies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          email_notifications: Json | null
+          id: string
+          interests: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_notifications?: Json | null
+          id?: string
+          interests?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_notifications?: Json | null
+          id?: string
+          interests?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
