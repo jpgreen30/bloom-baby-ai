@@ -9,55 +9,59 @@ import { toast } from "sonner";
 import { Baby } from "lucide-react";
 
 export const AuthForm = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast.success("Welcome back!");
-        navigate("/dashboard");
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-        if (error) throw error;
-        toast.success("Account created! Welcome to Baby to Bloom!");
-        navigate("/baby/setup");
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      
+      toast.success("Welcome back!");
+      
+      // Check onboarding status
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.onboarding_completed) {
+          navigate("/dashboard");
+        } else {
+          navigate("/onboarding");
+        }
       }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+      toast.error(error.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleAuth = async () => {
+    setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/onboarding?step=2`,
         },
       });
       if (error) throw error;
     } catch (error: any) {
       toast.error(error.message || "Failed to sign in with Google");
+      setLoading(false);
     }
   };
 
@@ -70,11 +74,11 @@ export const AuthForm = () => {
           </div>
           <CardTitle className="text-3xl">Baby to Bloom AI</CardTitle>
           <CardDescription>
-            {isLogin ? "Welcome back! Track your baby's journey" : "Start tracking your baby's milestones"}
+            Welcome back! Track your baby's journey
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -99,7 +103,7 @@ export const AuthForm = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
@@ -118,6 +122,7 @@ export const AuthForm = () => {
               variant="outline"
               className="w-full mt-4"
               onClick={handleGoogleAuth}
+              disabled={loading}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -142,14 +147,13 @@ export const AuthForm = () => {
           </div>
 
           <div className="mt-6 text-center text-sm">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
+            Don't have an account?{" "}
+            <a
+              href="/onboarding"
               className="text-primary hover:underline font-medium"
             >
-              {isLogin ? "Sign up" : "Sign in"}
-            </button>
+              Sign up
+            </a>
           </div>
         </CardContent>
       </Card>

@@ -33,11 +33,11 @@ const Index = () => {
               Track, celebrate, and predict your baby's developmental milestones with intelligent AI insights
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button size="lg" onClick={() => navigate("/auth")} className="text-lg">
+              <Button size="lg" onClick={() => navigate("/onboarding")} className="text-lg">
                 Get Started Free
               </Button>
-              <Button size="lg" variant="outline" className="text-lg bg-card/20 backdrop-blur-sm border-primary-foreground/20 hover:bg-card/30">
-                Learn More
+              <Button size="lg" variant="outline" onClick={() => navigate("/auth")} className="text-lg bg-card/20 backdrop-blur-sm border-primary-foreground/20 hover:bg-card/30">
+                Sign In
               </Button>
             </div>
           </div>
