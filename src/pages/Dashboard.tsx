@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MilestoneCard } from "@/components/MilestoneCard";
 import { AIPredictions } from "@/components/AIPredictions";
+import { SmartRecommendations } from "@/components/SmartRecommendations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -134,6 +135,8 @@ const Dashboard = () => {
           completedMilestones={completedMilestones}
           upcomingMilestones={upcomingMilestones}
         />
+
+        <SmartRecommendations babyId={baby.id} />
 
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-5">

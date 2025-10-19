@@ -191,12 +191,14 @@ export type Database = {
           age_range: string | null
           brand: string | null
           category: string
+          click_count: number | null
           condition: string
           created_at: string
           description: string
           favorited_count: number | null
           featured: boolean | null
           id: string
+          impression_count: number | null
           local_pickup: boolean | null
           location_city: string | null
           location_state: string | null
@@ -215,12 +217,14 @@ export type Database = {
           age_range?: string | null
           brand?: string | null
           category: string
+          click_count?: number | null
           condition: string
           created_at?: string
           description: string
           favorited_count?: number | null
           featured?: boolean | null
           id?: string
+          impression_count?: number | null
           local_pickup?: boolean | null
           location_city?: string | null
           location_state?: string | null
@@ -239,12 +243,14 @@ export type Database = {
           age_range?: string | null
           brand?: string | null
           category?: string
+          click_count?: number | null
           condition?: string
           created_at?: string
           description?: string
           favorited_count?: number | null
           featured?: boolean | null
           id?: string
+          impression_count?: number | null
           local_pickup?: boolean | null
           location_city?: string | null
           location_state?: string | null
@@ -493,6 +499,50 @@ export type Database = {
           typical_age_weeks?: number
         }
         Relationships: []
+      }
+      product_recommendations: {
+        Row: {
+          clicked: boolean | null
+          created_at: string
+          id: string
+          listing_id: string
+          purchased: boolean | null
+          reason: string
+          recommended_at: string
+          relevance_score: number
+          user_id: string
+        }
+        Insert: {
+          clicked?: boolean | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          purchased?: boolean | null
+          reason: string
+          recommended_at?: string
+          relevance_score: number
+          user_id: string
+        }
+        Update: {
+          clicked?: boolean | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          purchased?: boolean | null
+          reason?: string
+          recommended_at?: string
+          relevance_score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_recommendations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

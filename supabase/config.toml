@@ -1,1 +1,7 @@
 project_id = "qeobfzrzqtskfprcgtel"
+
+[functions.milestone-predictions]
+verify_jwt = false
+
+[functions.recommend-products]
+verify_jwt = true
