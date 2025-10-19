@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MilestoneCard } from "@/components/MilestoneCard";
 import { AIPredictions } from "@/components/AIPredictions";
 import ProductRecommendations from "@/components/ProductRecommendations";
+import { BabyDevelopment3D } from "@/components/BabyDevelopment3D";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -129,12 +130,20 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <AIPredictions
-          babyName={baby.name}
-          babyAge={age}
-          completedMilestones={completedMilestones}
-          upcomingMilestones={upcomingMilestones}
-        />
+        <div className="grid gap-6 md:grid-cols-2">
+          <BabyDevelopment3D
+            babyName={baby.name}
+            babyAge={age}
+            isPregnancy={baby.is_pregnancy}
+            pregnancyWeek={baby.pregnancy_week}
+          />
+          <AIPredictions
+            babyName={baby.name}
+            babyAge={age}
+            completedMilestones={completedMilestones}
+            upcomingMilestones={upcomingMilestones}
+          />
+        </div>
 
         <ProductRecommendations
           babyName={baby.name}

@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.recommend-products]
 verify_jwt = true
+
+[functions.preload-recommendations]
+verify_jwt = false

@@ -25,9 +25,37 @@ const ProductRecommendations = ({
 }: ProductRecommendationsProps) => {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const { toast } = useToast();
 
-  const generateRecommendations = async () => {
+  const fetchExistingRecommendations = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('product_recommendations')
+        .select('*, listing:marketplace_listings(*)')
+        .eq('user_id', user.id)
+        .order('relevance_score', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setRecommendations(data);
+        setLastUpdated(new Date(data[0].recommended_at));
+      } else {
+        // No existing recommendations, generate new ones
+        generateRecommendations(false);
+      }
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+      generateRecommendations(false);
+    }
+  };
+
+  const generateRecommendations = async (forceRefresh = false) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('recommend-products', {
@@ -37,16 +65,21 @@ const ProductRecommendations = ({
           pregnancyWeek,
           completedMilestones,
           upcomingMilestones,
+          forceRefresh,
         },
       });
 
       if (error) throw error;
 
       setRecommendations(data.recommendations || []);
-      toast({
-        title: "Recommendations Updated",
-        description: `Found ${data.recommendations?.length || 0} personalized products for ${babyName}.`,
-      });
+      setLastUpdated(new Date());
+      
+      if (!data.cached) {
+        toast({
+          title: "Recommendations Updated",
+          description: `Found ${data.recommendations?.length || 0} personalized products for ${babyName}.`,
+        });
+      }
     } catch (error: any) {
       console.error('Error generating recommendations:', error);
       toast({
@@ -88,7 +121,7 @@ const ProductRecommendations = ({
   };
 
   useEffect(() => {
-    generateRecommendations();
+    fetchExistingRecommendations();
   }, []);
 
   if (recommendations.length === 0 && !loading) {
@@ -105,7 +138,7 @@ const ProductRecommendations = ({
                 Personalized marketplace picks based on {babyName}'s journey
               </CardDescription>
             </div>
-            <Button onClick={generateRecommendations} disabled={loading}>
+            <Button onClick={() => generateRecommendations(false)} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Generate
             </Button>
@@ -131,9 +164,14 @@ const ProductRecommendations = ({
             </CardTitle>
             <CardDescription>
               {recommendations.length} personalized picks from the marketplace
+              {lastUpdated && (
+                <span className="text-xs ml-2 text-muted-foreground">
+                  • Updated {Math.round((new Date().getTime() - lastUpdated.getTime()) / (1000 * 60 * 60))}h ago
+                </span>
+              )}
             </CardDescription>
           </div>
-          <Button onClick={generateRecommendations} disabled={loading} variant="outline" size="sm">
+          <Button onClick={() => generateRecommendations(true)} disabled={loading} variant="outline" size="sm">
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>

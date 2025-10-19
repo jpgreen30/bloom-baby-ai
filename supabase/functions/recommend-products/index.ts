@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { babyAge, isPregnancy, pregnancyWeek, completedMilestones, upcomingMilestones } = await req.json();
+    const { babyAge, isPregnancy, pregnancyWeek, completedMilestones, upcomingMilestones, forceRefresh = false } = await req.json();
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -23,6 +23,37 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Get user ID from auth header
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const { data: { user } } = await supabase.auth.getUser(token || '');
+    
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    // Check for existing fresh recommendations (if not forcing refresh)
+    if (!forceRefresh) {
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: existingRecs, error: recError } = await supabase
+        .from('product_recommendations')
+        .select('*, listing:marketplace_listings(*)')
+        .eq('user_id', user.id)
+        .gte('recommended_at', oneDayAgo)
+        .order('relevance_score', { ascending: false })
+        .limit(10);
+
+      if (!recError && existingRecs && existingRecs.length > 0) {
+        console.log('Returning existing recommendations from database');
+        return new Response(JSON.stringify({ 
+          recommendations: existingRecs,
+          cached: true 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
     
     // Get active marketplace listings
     const { data: listings, error: listingsError } = await supabase
@@ -113,21 +144,13 @@ Urgency: "high" (needed now), "medium" (needed in 2-4 weeks), "low" (nice to hav
       throw new Error('Invalid AI response format');
     }
 
-    // Get user ID from auth header
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    const { data: { user } } = await supabase.auth.getUser(token || '');
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
     // Store recommendations in database
     const recommendationsToInsert = recommendations.map((rec: any) => ({
       user_id: user.id,
       listing_id: rec.listing_id,
       relevance_score: rec.relevance_score,
       reason: rec.reason,
+      urgency: rec.urgency || 'normal',
     }));
 
     const { error: insertError } = await supabase
