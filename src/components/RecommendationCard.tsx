@@ -1,10 +1,8 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { Sparkles, TrendingUp, Clock } from "lucide-react";
 
 interface RecommendationCardProps {
   listing: {
@@ -13,78 +11,71 @@ interface RecommendationCardProps {
     price: number;
     category: string;
     condition: string;
+    age_range?: string;
   };
-  relevanceScore: number;
+  relevance_score: number;
   reason: string;
-  imageUrl?: string;
-  recommendationId: string;
+  urgency?: string;
+  onTrackClick: () => void;
 }
 
-export const RecommendationCard = ({
-  listing,
-  relevanceScore,
-  reason,
-  imageUrl,
-  recommendationId,
+const RecommendationCard = ({ 
+  listing, 
+  relevance_score, 
+  reason, 
+  urgency,
+  onTrackClick 
 }: RecommendationCardProps) => {
   const navigate = useNavigate();
 
-  const handleClick = async () => {
-    try {
-      // Mark as clicked
-      await supabase
-        .from('product_recommendations')
-        .update({ clicked: true })
-        .eq('id', recommendationId);
+  const urgencyConfig = {
+    high: { label: 'Needed Now', color: 'destructive' as const, icon: Clock },
+    medium: { label: 'Needed Soon', color: 'default' as const, icon: TrendingUp },
+    low: { label: 'Nice to Have', color: 'secondary' as const, icon: Sparkles },
+  };
 
-      // Track click
-      const { data: currentListing } = await supabase
-        .from('marketplace_listings')
-        .select('click_count')
-        .eq('id', listing.id)
-        .single();
+  const config = urgencyConfig[urgency as keyof typeof urgencyConfig] || urgencyConfig.low;
+  const UrgencyIcon = config.icon;
 
-      if (currentListing) {
-        await supabase
-          .from('marketplace_listings')
-          .update({ click_count: (currentListing.click_count || 0) + 1 })
-          .eq('id', listing.id);
-      }
-
-      navigate('/marketplace');
-    } catch (error) {
-      console.error('Error tracking click:', error);
-      toast.error('Failed to track interaction');
-    }
+  const handleViewProduct = () => {
+    onTrackClick();
+    navigate('/marketplace');
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={handleClick}>
-      <div className="aspect-video bg-muted relative">
-        {imageUrl ? (
-          <img src={imageUrl} alt={listing.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            No image
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <CardTitle className="text-lg line-clamp-2">{listing.title}</CardTitle>
+            <CardDescription className="mt-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-primary">${listing.price}</span>
+                <Badge variant="outline">{listing.category}</Badge>
+                <Badge variant="secondary">{listing.condition}</Badge>
+              </div>
+            </CardDescription>
           </div>
-        )}
-        <Badge className="absolute top-2 right-2 bg-primary/90">
-          <Sparkles className="w-3 h-3 mr-1" />
-          {relevanceScore}% match
-        </Badge>
-      </div>
-      <CardContent className="p-4 space-y-2">
-        <div className="flex justify-between items-start">
-          <h3 className="font-semibold line-clamp-1">{listing.title}</h3>
-          <span className="font-bold text-primary">${listing.price}</span>
+          <Badge variant={config.color} className="flex items-center gap-1 whitespace-nowrap">
+            <UrgencyIcon className="h-3 w-3" />
+            {config.label}
+          </Badge>
         </div>
-        <p className="text-sm text-muted-foreground line-clamp-2">{reason}</p>
-        <div className="flex gap-2">
-          <Badge variant="secondary">{listing.category}</Badge>
-          <Badge variant="outline">{listing.condition}</Badge>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="font-medium">{relevance_score}% Match</span>
+          </div>
+          <p className="text-sm text-muted-foreground">{reason}</p>
+          <Button onClick={handleViewProduct} className="w-full">
+            View Product
+          </Button>
         </div>
-        <Button className="w-full" size="sm">View Product</Button>
       </CardContent>
     </Card>
   );
 };
+
+export default RecommendationCard;

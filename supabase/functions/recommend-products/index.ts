@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,35 +12,19 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const { babyAge, isPregnancy, pregnancyWeek, completedMilestones, upcomingMilestones } = await req.json();
     
-    if (userError || !user) {
-      throw new Error('Unauthorized');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const { babyId } = await req.json();
-
-    // Fetch baby data with milestones
-    const { data: baby, error: babyError } = await supabase
-      .from('babies')
-      .select('*, baby_milestones(milestone_id, status, achieved_at)')
-      .eq('id', babyId)
-      .single();
-
-    if (babyError) throw babyError;
-
-    // Fetch active marketplace listings
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Get active marketplace listings
     const { data: listings, error: listingsError } = await supabase
       .from('marketplace_listings')
       .select('*')
@@ -49,58 +33,52 @@ serve(async (req) => {
 
     if (listingsError) throw listingsError;
 
-    // Calculate baby's age in weeks
-    const birthdate = new Date(baby.birthdate);
-    const now = new Date();
-    const ageInWeeks = Math.floor((now.getTime() - birthdate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-    const isPregnancy = baby.is_pregnancy;
-    const pregnancyWeek = baby.pregnancy_week || 0;
-
-    // Get achieved milestone IDs
-    const achievedMilestones = baby.baby_milestones
-      ?.filter((m: any) => m.status === 'achieved')
-      .map((m: any) => m.milestone_id) || [];
-
-    // Prepare AI prompt
+    // Prepare context for AI
     const currentMonth = new Date().toLocaleString('default', { month: 'long' });
-    const season = ['December', 'January', 'February'].includes(currentMonth) ? 'winter' :
-                   ['March', 'April', 'May'].includes(currentMonth) ? 'spring' :
-                   ['June', 'July', 'August'].includes(currentMonth) ? 'summer' : 'fall';
+    const context = isPregnancy 
+      ? `Pregnancy week ${pregnancyWeek}, expecting parent needs`
+      : `Baby age: ${babyAge}. Completed milestones: ${completedMilestones.join(', ')}. Upcoming milestones: ${upcomingMilestones.join(', ')}.`;
 
-    const prompt = `You are a baby product recommendation expert. Analyze these products and recommend the top 5 most relevant items.
+    const prompt = `You are a baby product recommendation expert. Analyze the following baby/pregnancy information and marketplace listings to provide personalized product recommendations.
 
-Baby Information:
-- ${isPregnancy ? `Pregnancy week: ${pregnancyWeek}` : `Age: ${ageInWeeks} weeks`}
-- Achieved milestones count: ${achievedMilestones.length}
-- Current season: ${season}
+Context: ${context}
+Current season/month: ${currentMonth}
 
-Available Products (JSON):
-${JSON.stringify(listings.slice(0, 20), null, 2)}
+Available Products:
+${listings?.map(l => `ID: ${l.id} | ${l.title} | Category: ${l.category} | Age Range: ${l.age_range || 'Not specified'} | Condition: ${l.condition} | Price: $${l.price} | Description: ${l.description.substring(0, 100)}`).join('\n')}
 
-Return ONLY a valid JSON array with exactly 5 recommendations. Each recommendation must have:
-- listing_id (UUID from the products)
-- relevance_score (0-100)
-- reason (one sentence explaining why this is needed now)
+Provide 5-8 highly relevant product recommendations. For each recommendation:
+1. Consider the baby's developmental stage and upcoming milestones
+2. Consider seasonal appropriateness (current month: ${currentMonth})
+3. Consider urgency (needed now vs. needed soon)
+4. Consider safety for the baby's age
+5. Prioritize items that match the baby's needs
 
-Format: [{"listing_id": "uuid", "relevance_score": 95, "reason": "explanation"}, ...]`;
+Return ONLY a JSON array with this exact structure:
+[
+  {
+    "listing_id": "uuid-here",
+    "relevance_score": 95,
+    "reason": "Perfect for tummy time - essential for the rolling over milestone you're approaching. Provides safe, cushioned space for practice.",
+    "urgency": "high"
+  }
+]
 
-    console.log('Calling Lovable AI for recommendations...');
+Relevance score: 0-100 based on how well it matches needs.
+Reason: 1-2 sentences explaining why this specific product is recommended now.
+Urgency: "high" (needed now), "medium" (needed in 2-4 weeks), "low" (nice to have).`;
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
-
+    // Call Lovable AI
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a product recommendation engine. Always return valid JSON only.' },
+          { role: 'system', content: 'You are a baby product recommendation expert. Always respond with valid JSON only.' },
           { role: 'user', content: prompt }
         ],
       }),
@@ -114,35 +92,37 @@ Format: [{"listing_id": "uuid", "relevance_score": 95, "reason": "explanation"},
         });
       }
       if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: 'Payment required. Please add credits to your workspace.' }), {
+        return new Response(JSON.stringify({ error: 'AI credits depleted. Please add credits.' }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      throw new Error('AI API request failed');
+      throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
     const content = aiData.choices[0].message.content;
     
-    console.log('AI Response:', content);
-
-    // Parse AI response
+    // Extract JSON from response (handle markdown code blocks)
     let recommendations;
     try {
       const jsonMatch = content.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        throw new Error('No JSON array found in response');
-      }
-      recommendations = JSON.parse(jsonMatch[0]);
+      recommendations = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
     } catch (e) {
-      console.error('Failed to parse AI response:', e);
+      console.error('Failed to parse AI response:', content);
       throw new Error('Invalid AI response format');
     }
 
-    // Save recommendations to database
+    // Get user ID from auth header
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const { data: { user } } = await supabase.auth.getUser(token || '');
+    
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    // Store recommendations in database
     const recommendationsToInsert = recommendations.map((rec: any) => ({
       user_id: user.id,
       listing_id: rec.listing_id,
@@ -150,28 +130,29 @@ Format: [{"listing_id": "uuid", "relevance_score": 95, "reason": "explanation"},
       reason: rec.reason,
     }));
 
-    // Delete old recommendations for this user
-    await supabase
-      .from('product_recommendations')
-      .delete()
-      .eq('user_id', user.id);
-
-    // Insert new recommendations
     const { error: insertError } = await supabase
       .from('product_recommendations')
       .insert(recommendationsToInsert);
 
     if (insertError) {
-      console.error('Insert error:', insertError);
-      throw insertError;
+      console.error('Error inserting recommendations:', insertError);
     }
 
-    return new Response(JSON.stringify({ recommendations }), {
+    // Return recommendations with listing details
+    const enrichedRecommendations = recommendations.map((rec: any) => {
+      const listing = listings?.find(l => l.id === rec.listing_id);
+      return {
+        ...rec,
+        listing,
+      };
+    });
+
+    return new Response(JSON.stringify({ recommendations: enrichedRecommendations }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in recommend-products:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

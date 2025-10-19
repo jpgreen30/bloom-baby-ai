@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MilestoneCard } from "@/components/MilestoneCard";
 import { AIPredictions } from "@/components/AIPredictions";
-import { SmartRecommendations } from "@/components/SmartRecommendations";
+import ProductRecommendations from "@/components/ProductRecommendations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -136,7 +136,14 @@ const Dashboard = () => {
           upcomingMilestones={upcomingMilestones}
         />
 
-        <SmartRecommendations babyId={baby.id} />
+        <ProductRecommendations
+          babyName={baby.name}
+          babyAge={`${age.months} months (${age.weeks} weeks)`}
+          isPregnancy={baby.is_pregnancy}
+          pregnancyWeek={baby.pregnancy_week}
+          completedMilestones={completedMilestones.map((m: any) => m.title)}
+          upcomingMilestones={upcomingMilestones.map((m: any) => m.title)}
+        />
 
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
