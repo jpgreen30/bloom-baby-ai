@@ -23,9 +23,11 @@ export type Database = {
           gender: string | null
           id: string
           is_pregnancy: boolean | null
+          last_recommendation_generated: string | null
           name: string
           notes: string | null
           pregnancy_week: number | null
+          recommendation_refresh_needed: boolean | null
           updated_at: string
           user_id: string
         }
@@ -37,9 +39,11 @@ export type Database = {
           gender?: string | null
           id?: string
           is_pregnancy?: boolean | null
+          last_recommendation_generated?: string | null
           name: string
           notes?: string | null
           pregnancy_week?: number | null
+          recommendation_refresh_needed?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -51,9 +55,11 @@ export type Database = {
           gender?: string | null
           id?: string
           is_pregnancy?: boolean | null
+          last_recommendation_generated?: string | null
           name?: string
           notes?: string | null
           pregnancy_week?: number | null
+          recommendation_refresh_needed?: boolean | null
           updated_at?: string
           user_id?: string
         }
@@ -510,6 +516,7 @@ export type Database = {
           reason: string
           recommended_at: string
           relevance_score: number
+          urgency: string | null
           user_id: string
         }
         Insert: {
@@ -521,6 +528,7 @@ export type Database = {
           reason: string
           recommended_at?: string
           relevance_score: number
+          urgency?: string | null
           user_id: string
         }
         Update: {
@@ -532,6 +540,7 @@ export type Database = {
           reason?: string
           recommended_at?: string
           relevance_score?: number
+          urgency?: string | null
           user_id?: string
         }
         Relationships: [
