@@ -14,3 +14,9 @@ verify_jwt = true
 
 [functions.generate-dashboard-summary]
 verify_jwt = true
+
+[functions.sync-awin-products]
+verify_jwt = false
+
+[functions.generate-awin-deeplink]
+verify_jwt = true

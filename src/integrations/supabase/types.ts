@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      awin_products: {
+        Row: {
+          age_range: string | null
+          awin_product_id: string
+          brand: string | null
+          category: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          last_synced: string | null
+          merchant_id: string
+          merchant_name: string
+          price: number
+          product_name: string
+          product_url: string
+          stock_status: string | null
+          subcategory: string | null
+        }
+        Insert: {
+          age_range?: string | null
+          awin_product_id: string
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          last_synced?: string | null
+          merchant_id: string
+          merchant_name: string
+          price: number
+          product_name: string
+          product_url: string
+          stock_status?: string | null
+          subcategory?: string | null
+        }
+        Update: {
+          age_range?: string | null
+          awin_product_id?: string
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          last_synced?: string | null
+          merchant_id?: string
+          merchant_name?: string
+          price?: number
+          product_name?: string
+          product_url?: string
+          stock_status?: string | null
+          subcategory?: string | null
+        }
+        Relationships: []
+      }
+      awin_recommendations: {
+        Row: {
+          awin_product_id: string
+          clicked: boolean | null
+          clicked_at: string | null
+          commission_earned: number | null
+          created_at: string | null
+          id: string
+          purchased: boolean | null
+          reason: string
+          recommended_at: string | null
+          relevance_score: number
+          urgency: string | null
+          user_id: string
+        }
+        Insert: {
+          awin_product_id: string
+          clicked?: boolean | null
+          clicked_at?: string | null
+          commission_earned?: number | null
+          created_at?: string | null
+          id?: string
+          purchased?: boolean | null
+          reason: string
+          recommended_at?: string | null
+          relevance_score: number
+          urgency?: string | null
+          user_id: string
+        }
+        Update: {
+          awin_product_id?: string
+          clicked?: boolean | null
+          clicked_at?: string | null
+          commission_earned?: number | null
+          created_at?: string | null
+          id?: string
+          purchased?: boolean | null
+          reason?: string
+          recommended_at?: string | null
+          relevance_score?: number
+          urgency?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "awin_recommendations_awin_product_id_fkey"
+            columns: ["awin_product_id"]
+            isOneToOne: false
+            referencedRelation: "awin_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       babies: {
         Row: {
           birth_weight: number | null
@@ -673,6 +786,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          awin_click_count: number | null
+          awin_commission_earned: number | null
+          awin_conversion_count: number | null
           baby_budget_monthly: string | null
           created_at: string
           display_name: string | null
@@ -693,6 +809,9 @@ export type Database = {
           zip_code: string | null
         }
         Insert: {
+          awin_click_count?: number | null
+          awin_commission_earned?: number | null
+          awin_conversion_count?: number | null
           baby_budget_monthly?: string | null
           created_at?: string
           display_name?: string | null
@@ -713,6 +832,9 @@ export type Database = {
           zip_code?: string | null
         }
         Update: {
+          awin_click_count?: number | null
+          awin_commission_earned?: number | null
+          awin_conversion_count?: number | null
           baby_budget_monthly?: string | null
           created_at?: string
           display_name?: string | null

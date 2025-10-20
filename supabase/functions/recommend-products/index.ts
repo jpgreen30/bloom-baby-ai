@@ -60,9 +60,32 @@ serve(async (req) => {
       .from('marketplace_listings')
       .select('*')
       .eq('status', 'active')
-      .limit(50);
+      .limit(30);
 
     if (listingsError) throw listingsError;
+
+    // Get Awin affiliate products
+    const { data: awinProducts, error: awinError } = await supabase
+      .from('awin_products')
+      .select('*')
+      .order('last_synced', { ascending: false })
+      .limit(50);
+
+    if (awinError) console.error('Error fetching Awin products:', awinError);
+
+    // Get user profile for budget/income data
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('household_income, baby_budget_monthly, housing_status')
+      .eq('id', user.id)
+      .single();
+
+    const budgetContext = profile ? `
+User Budget Context:
+- Household Income: ${profile.household_income || 'not specified'}
+- Monthly Baby Budget: ${profile.baby_budget_monthly || 'not specified'}
+- Housing: ${profile.housing_status || 'not specified'}
+` : '';
 
     // Prepare context for AI
     const currentMonth = new Date().toLocaleString('default', { month: 'long' });
@@ -70,34 +93,44 @@ serve(async (req) => {
       ? `Pregnancy week ${pregnancyWeek}, expecting parent needs`
       : `Baby age: ${babyAge}. Completed milestones: ${completedMilestones.join(', ')}. Upcoming milestones: ${upcomingMilestones.join(', ')}.`;
 
-    const prompt = `You are a baby product recommendation expert. Analyze the following baby/pregnancy information and marketplace listings to provide personalized product recommendations.
+    const prompt = `You are a baby product recommendation expert. Analyze the following baby/pregnancy information and available products to provide personalized product recommendations.
 
 Context: ${context}
 Current season/month: ${currentMonth}
+${budgetContext}
 
-Available Products:
-${listings?.map(l => `ID: ${l.id} | ${l.title} | Category: ${l.category} | Age Range: ${l.age_range || 'Not specified'} | Condition: ${l.condition} | Price: $${l.price} | Description: ${l.description.substring(0, 100)}`).join('\n')}
+INTERNAL MARKETPLACE PRODUCTS (used/secondhand from local sellers):
+${listings?.map(l => `[MARKETPLACE] ID: ${l.id} | ${l.title} | Category: ${l.category} | Age Range: ${l.age_range || 'Not specified'} | Condition: ${l.condition} | Price: $${l.price} | Description: ${l.description.substring(0, 100)}`).join('\n')}
 
-Provide 5-8 highly relevant product recommendations. For each recommendation:
+AFFILIATE PRODUCTS (new items from retailers):
+${awinProducts?.map(p => `[AFFILIATE] ID: ${p.id} | ${p.product_name} | Merchant: ${p.merchant_name} | Category: ${p.category || 'Not specified'} | Age Range: ${p.age_range} | Brand: ${p.brand || 'N/A'} | Price: $${p.price} | Stock: ${p.stock_status}`).join('\n')}
+
+Provide 12-15 highly relevant product recommendations mixing both sources.
+
+Guidelines:
 1. Consider the baby's developmental stage and upcoming milestones
-2. Consider seasonal appropriateness (current month: ${currentMonth})
-3. Consider urgency (needed now vs. needed soon)
-4. Consider safety for the baby's age
-5. Prioritize items that match the baby's needs
+2. Consider seasonal appropriateness and urgency
+3. Mix recommendations: 40% marketplace (budget-friendly), 60% affiliate (new items)
+4. For lower income/budget users, prioritize marketplace products
+5. For higher income users, include more affiliate products with premium brands
+6. Match safety requirements for the baby's age
 
 Return ONLY a JSON array with this exact structure:
 [
   {
-    "listing_id": "uuid-here",
+    "product_id": "uuid-here",
+    "source": "marketplace" OR "affiliate",
     "relevance_score": 95,
-    "reason": "Perfect for tummy time - essential for the rolling over milestone you're approaching. Provides safe, cushioned space for practice.",
+    "reason": "Perfect for tummy time - essential for the rolling over milestone you're approaching.",
     "urgency": "high"
   }
 ]
 
-Relevance score: 0-100 based on how well it matches needs.
-Reason: 1-2 sentences explaining why this specific product is recommended now.
-Urgency: "high" (needed now), "medium" (needed in 2-4 weeks), "low" (nice to have).`;
+- product_id: Use the ID from either MARKETPLACE or AFFILIATE list
+- source: MUST be exactly "marketplace" or "affiliate" 
+- relevance_score: 0-100 based on how well it matches needs
+- reason: 1-2 sentences explaining why recommended now
+- urgency: "high" (needed now), "medium" (2-4 weeks), "low" (nice to have)`;
 
     // Call Lovable AI
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -144,43 +177,77 @@ Urgency: "high" (needed now), "medium" (needed in 2-4 weeks), "low" (nice to hav
       throw new Error('Invalid AI response format');
     }
 
-    // Filter out recommendations with invalid listing IDs and enrich with listing details
-    const enrichedRecommendations = recommendations
-      .map((rec: any) => {
-        const listing = listings?.find(l => l.id === rec.listing_id);
-        if (!listing) {
-          console.warn(`Listing not found for ID: ${rec.listing_id}`);
-          return null;
+    // Separate and enrich recommendations by source
+    const marketplaceRecs = [];
+    const affiliateRecs = [];
+
+    for (const rec of recommendations) {
+      if (rec.source === 'marketplace') {
+        const listing = listings?.find(l => l.id === rec.product_id);
+        if (listing) {
+          marketplaceRecs.push({
+            ...rec,
+            listing_id: rec.product_id,
+            listing,
+          });
         }
-        return {
-          ...rec,
-          listing,
-        };
-      })
-      .filter((rec: any) => rec !== null); // Remove invalid recommendations
-
-    // Only insert valid recommendations
-    const recommendationsToInsert = enrichedRecommendations.map((rec: any) => ({
-      user_id: user.id,
-      listing_id: rec.listing_id,
-      relevance_score: rec.relevance_score,
-      reason: rec.reason,
-      urgency: rec.urgency === 'high' || rec.urgency === 'medium' || rec.urgency === 'low' 
-        ? rec.urgency 
-        : 'medium', // Default to 'medium' if invalid
-    }));
-
-    if (recommendationsToInsert.length > 0) {
-      const { error: insertError } = await supabase
-        .from('product_recommendations')
-        .insert(recommendationsToInsert);
-
-      if (insertError) {
-        console.error('Error inserting recommendations:', insertError);
+      } else if (rec.source === 'affiliate') {
+        const awinProduct = awinProducts?.find(p => p.id === rec.product_id);
+        if (awinProduct) {
+          affiliateRecs.push({
+            ...rec,
+            awin_product_id: rec.product_id,
+            product: awinProduct,
+          });
+        }
       }
     }
 
-    return new Response(JSON.stringify({ recommendations: enrichedRecommendations }), {
+    // Insert marketplace recommendations
+    if (marketplaceRecs.length > 0) {
+      const marketplaceInserts = marketplaceRecs.map(rec => ({
+        user_id: user.id,
+        listing_id: rec.listing_id,
+        relevance_score: rec.relevance_score,
+        reason: rec.reason,
+        urgency: ['high', 'medium', 'low'].includes(rec.urgency) ? rec.urgency : 'medium',
+      }));
+
+      const { error: mpError } = await supabase
+        .from('product_recommendations')
+        .insert(marketplaceInserts);
+
+      if (mpError) console.error('Error inserting marketplace recommendations:', mpError);
+    }
+
+    // Insert affiliate recommendations
+    if (affiliateRecs.length > 0) {
+      const affiliateInserts = affiliateRecs.map(rec => ({
+        user_id: user.id,
+        awin_product_id: rec.awin_product_id,
+        relevance_score: rec.relevance_score,
+        reason: rec.reason,
+        urgency: ['high', 'medium', 'low'].includes(rec.urgency) ? rec.urgency : 'medium',
+      }));
+
+      const { error: afError } = await supabase
+        .from('awin_recommendations')
+        .insert(affiliateInserts);
+
+      if (afError) console.error('Error inserting affiliate recommendations:', afError);
+    }
+
+    // Return combined recommendations
+    const allRecommendations = [
+      ...marketplaceRecs.map(r => ({ ...r, source: 'marketplace' })),
+      ...affiliateRecs.map(r => ({ ...r, source: 'affiliate' })),
+    ].sort((a, b) => b.relevance_score - a.relevance_score);
+
+    return new Response(JSON.stringify({ 
+      recommendations: allRecommendations,
+      marketplaceCount: marketplaceRecs.length,
+      affiliateCount: affiliateRecs.length,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

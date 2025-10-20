@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import RecommendationCard from "@/components/RecommendationCard";
+import AffiliateProductCard from "@/components/AffiliateProductCard";
 import { Sparkles, RefreshCw } from "lucide-react";
 
 interface ProductRecommendationsProps {
@@ -33,18 +35,39 @@ const ProductRecommendations = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from('product_recommendations')
-        .select('*, listing:marketplace_listings(*)')
-        .eq('user_id', user.id)
-        .order('relevance_score', { ascending: false })
-        .limit(10);
+      // Fetch both marketplace and affiliate recommendations
+      const [marketplaceRes, affiliateRes] = await Promise.all([
+        supabase
+          .from('product_recommendations')
+          .select('*, listing:marketplace_listings(*)')
+          .eq('user_id', user.id)
+          .order('relevance_score', { ascending: false })
+          .limit(8),
+        supabase
+          .from('awin_recommendations')
+          .select('*, product:awin_products(*)')
+          .eq('user_id', user.id)
+          .order('relevance_score', { ascending: false })
+          .limit(8),
+      ]);
 
-      if (error) throw error;
+      if (marketplaceRes.error && affiliateRes.error) {
+        throw new Error('Failed to fetch recommendations');
+      }
 
-      if (data && data.length > 0) {
-        setRecommendations(data);
-        setLastUpdated(new Date(data[0].recommended_at));
+      // Combine and sort by relevance score
+      const combined = [
+        ...(marketplaceRes.data || []).map(r => ({ ...r, source: 'marketplace' })),
+        ...(affiliateRes.data || []).map(r => ({ ...r, source: 'affiliate' })),
+      ].sort((a, b) => b.relevance_score - a.relevance_score);
+
+      if (combined.length > 0) {
+        setRecommendations(combined);
+        const latestTimestamp = Math.max(
+          ...(marketplaceRes.data || []).map(r => new Date(r.recommended_at).getTime()),
+          ...(affiliateRes.data || []).map(r => new Date(r.recommended_at).getTime())
+        );
+        setLastUpdated(new Date(latestTimestamp));
       } else {
         // No existing recommendations, generate new ones
         generateRecommendations(false);
@@ -75,9 +98,12 @@ const ProductRecommendations = ({
       setLastUpdated(new Date());
       
       if (!data.cached) {
+        const total = data.recommendations?.length || 0;
+        const marketplace = data.marketplaceCount || 0;
+        const affiliate = data.affiliateCount || 0;
         toast({
           title: "Recommendations Updated",
-          description: `Found ${data.recommendations?.length || 0} personalized products for ${babyName}.`,
+          description: `Found ${total} products: ${marketplace} marketplace, ${affiliate} affiliate deals for ${babyName}.`,
         });
       }
     } catch (error: any) {
@@ -163,12 +189,20 @@ const ProductRecommendations = ({
               Recommended for {babyName}
             </CardTitle>
             <CardDescription>
-              {recommendations.length} personalized picks from the marketplace
+              {recommendations.length} personalized products
               {lastUpdated && (
                 <span className="text-xs ml-2 text-muted-foreground">
                   • Updated {Math.round((new Date().getTime() - lastUpdated.getTime()) / (1000 * 60 * 60))}h ago
                 </span>
               )}
+              <div className="flex gap-2 mt-2">
+                <Badge variant="outline" className="text-xs">
+                  {recommendations.filter(r => r.source === 'marketplace').length} Marketplace
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {recommendations.filter(r => r.source === 'affiliate').length} Affiliate
+                </Badge>
+              </div>
             </CardDescription>
           </div>
           <Button onClick={() => generateRecommendations(true)} disabled={loading} variant="outline" size="sm">
@@ -185,17 +219,29 @@ const ProductRecommendations = ({
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recommendations.map((rec) => (
-              <RecommendationCard
-                key={rec.listing_id}
-                listing={rec.listing}
-                relevance_score={rec.relevance_score}
-                reason={rec.reason}
-                urgency={rec.urgency}
-                onTrackClick={() => trackClick(rec.listing_id, rec.id)}
-              />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recommendations.map((rec) => 
+              rec.source === 'marketplace' ? (
+                <RecommendationCard
+                  key={`mp-${rec.listing_id}`}
+                  listing={rec.listing}
+                  relevance_score={rec.relevance_score}
+                  reason={rec.reason}
+                  urgency={rec.urgency}
+                  onTrackClick={() => trackClick(rec.listing_id, rec.id)}
+                />
+              ) : (
+                <AffiliateProductCard
+                  key={`af-${rec.awin_product_id}`}
+                  product={rec.product}
+                  relevance_score={rec.relevance_score}
+                  reason={rec.reason}
+                  urgency={rec.urgency}
+                  recommendationId={rec.id}
+                  onTrackClick={() => {}}
+                />
+              )
+            )}
           </div>
         )}
       </CardContent>
