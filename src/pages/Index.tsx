@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Baby, Sparkles, Heart, Gift, AlertCircle, TrendingUp } from "lucide-react";
 import heroImage from "@/assets/hero-baby.jpg";
+import dashboardMockup from "@/assets/dashboard-mockup.png";
 import { Logo } from "@/components/ui/Logo";
 import HeroStats from "@/components/landing/HeroStats";
 import TestimonialCarousel from "@/components/landing/TestimonialCarousel";
@@ -51,9 +52,13 @@ const Index = () => {
               <span className="text-sm font-semibold">Limited Offer - Only 247 spots left!</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
-              Get $400 in FREE Baby Essentials + AI-Powered Milestone Tracking
-            </h1>
+            <div className="max-w-md mx-auto my-8">
+              <img 
+                src={dashboardMockup} 
+                alt="Baby to Bloom AI Dashboard - Week 12 milestone tracking with personalized product recommendations" 
+                className="w-full h-auto drop-shadow-2xl rounded-3xl"
+              />
+            </div>
             
             <div className="flex items-center justify-center gap-1 text-sm md:text-base">
               <span>⭐⭐⭐⭐⭐</span>
