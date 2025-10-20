@@ -22,7 +22,7 @@ const Index = () => {
       {/* Value Proposition Banner */}
       <div className="bg-gradient-to-r from-accent via-primary to-accent py-3 text-center text-primary-foreground">
         <div className="container mx-auto px-4 flex flex-wrap items-center justify-center md:justify-between gap-4">
-          <Logo size="sm" clickable={false} className="hidden md:block" />
+          <Logo size="lg" clickable={true} to="/" className="flex-shrink-0" />
           <p className="text-sm md:text-base font-semibold flex flex-wrap items-center justify-center gap-2">
             <Gift className="w-5 h-5" />
             <span>NEW MEMBER BONUS: $400 in Free Baby Essentials</span>
