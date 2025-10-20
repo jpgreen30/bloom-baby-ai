@@ -44,6 +44,10 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        warning: {
+          DEFAULT: "hsl(45 100% 51%)",
+          foreground: "hsl(26 90% 20%)",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -62,6 +66,9 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "pregnancy-pink": "hsl(350 100% 95%)",
+        "pregnancy-lavender": "hsl(280 50% 85%)",
+        "pregnancy-yellow": "hsl(50 100% 93%)",
       },
       backgroundImage: {
         'gradient-hero': 'var(--gradient-hero)',

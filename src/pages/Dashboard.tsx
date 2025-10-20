@@ -8,6 +8,7 @@ import { MilestoneUnlockCard } from "@/components/dashboard/feed/MilestoneUnlock
 import { ProductCarouselCard } from "@/components/dashboard/feed/ProductCarouselCard";
 import { CommunityFeedCard } from "@/components/dashboard/feed/CommunityFeedCard";
 import { TipNuggetCard } from "@/components/dashboard/feed/TipNuggetCard";
+import { PregnancyDashboard } from "@/components/dashboard/pregnancy/PregnancyDashboard";
 
 interface FeedItem {
   id: string;
@@ -322,6 +323,15 @@ export default function Dashboard() {
     }
   };
 
+  // Check if pregnancy mode
+  const isPregnancy = baby?.is_pregnancy === true;
+
+  // If pregnancy mode, show pregnancy dashboard
+  if (isPregnancy) {
+    return <PregnancyDashboard baby={baby} aiSummary={aiSummary} />;
+  }
+
+  // Otherwise show normal feed
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Hero Banner */}

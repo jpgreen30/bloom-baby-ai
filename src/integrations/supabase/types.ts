@@ -577,6 +577,53 @@ export type Database = {
         }
         Relationships: []
       }
+      pregnancy_alerts: {
+        Row: {
+          alert_type: string
+          baby_id: string
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          due_week: number
+          id: string
+          priority: string | null
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          baby_id: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_week: number
+          id?: string
+          priority?: string | null
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          baby_id?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_week?: number
+          id?: string
+          priority?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pregnancy_alerts_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "babies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_recommendations: {
         Row: {
           clicked: boolean | null

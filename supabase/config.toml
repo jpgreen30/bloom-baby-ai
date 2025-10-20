@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.generate-baby-image]
 verify_jwt = true
+
+[functions.generate-dashboard-summary]
+verify_jwt = true

@@ -52,7 +52,32 @@ serve(async (req) => {
     // Call Lovable AI
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    const prompt = `Generate a single encouraging sentence (max 15 words) for a parent dashboard based on this data:
+    let prompt = "";
+    
+    if (baby.is_pregnancy) {
+      // Pregnancy-specific prompt
+      const trimester = baby.pregnancy_week <= 13 ? 1 : baby.pregnancy_week <= 27 ? 2 : 3;
+      prompt = `Generate ONE encouraging sentence (max 15 words) for a pregnant parent at week ${baby.pregnancy_week}:
+
+Trimester: ${trimester}
+Due date: ${baby.due_date}
+Baby name: ${baby.name}
+
+Focus on:
+- Fetal development this specific week
+- What mom might experience
+- Gentle preparation tips
+
+Examples:
+- "Week ${baby.pregnancy_week}: ${baby.name} can hear your voice—talk and sing!"
+- "Your baby's lungs are maturing—practice breathing exercises for labor."
+- "Third trimester begins—time to start preparing that hospital bag!"
+- "${baby.name} is the size of a mango and moving more each day!"
+
+Return ONLY the sentence, no extra formatting.`;
+    } else {
+      // Baby/parenting prompt
+      prompt = `Generate a single encouraging sentence (max 15 words) for a parent dashboard based on this data:
 
 Baby: ${baby.name}
 Age: ${ageDescription}
@@ -61,9 +86,10 @@ Recent milestones: ${recentMilestones.length} achieved in the last week
 Make it warm, supportive, and specific. Examples:
 - "${baby.name} hit ${recentMilestones.length} milestones this week—you're doing amazing! 🎉"
 - "Great progress this week—${baby.name} is thriving!"
-- "Week ${baby.pregnancy_week}: Baby is growing beautifully! 💙"
+- "${baby.name} is growing so fast—cherish these moments!"
 
 Return ONLY the sentence, no extra formatting.`;
+    }
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
