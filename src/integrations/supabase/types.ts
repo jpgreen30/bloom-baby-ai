@@ -541,6 +541,42 @@ export type Database = {
         }
         Relationships: []
       }
+      parenting_tips: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          icon: string | null
+          id: string
+          max_age_weeks: number
+          min_age_weeks: number
+          priority: number | null
+          title: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          max_age_weeks?: number
+          min_age_weeks?: number
+          priority?: number | null
+          title: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          max_age_weeks?: number
+          min_age_weeks?: number
+          priority?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
       product_recommendations: {
         Row: {
           clicked: boolean | null
