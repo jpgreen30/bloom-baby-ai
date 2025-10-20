@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingStep1 } from "./OnboardingStep1";
 import { OnboardingStep2 } from "./OnboardingStep2";
+import { OnboardingStep2_5 } from "./OnboardingStep2_5";
 import { OnboardingStep3 } from "./OnboardingStep3";
 import { OnboardingStep4 } from "./OnboardingStep4";
 import { OnboardingStep5 } from "./OnboardingStep5";
@@ -24,6 +25,13 @@ export const OnboardingWizard = () => {
     lastName: "",
     phone: "",
     zipCode: "",
+    household_income: "",
+    baby_budget_monthly: "",
+    education_level: "",
+    housing_status: "",
+    household_size: 2,
+    employment_status: "",
+    partner_status: "",
     babyStatus: "born" as "pregnant" | "born",
     babyName: "",
     birthdate: "",
@@ -49,7 +57,7 @@ export const OnboardingWizard = () => {
       // Check if user already completed onboarding
       const { data: profile } = await supabase
         .from("profiles")
-        .select("onboarding_completed, onboarding_step, first_name, last_name, phone, zip_code, email")
+        .select("onboarding_completed, onboarding_step, first_name, last_name, phone, zip_code, email, household_income, baby_budget_monthly, education_level, housing_status, household_size, employment_status, partner_status")
         .eq("id", user.id)
         .single();
 
@@ -68,6 +76,13 @@ export const OnboardingWizard = () => {
           lastName: profile.last_name || "",
           phone: profile.phone || "",
           zipCode: profile.zip_code || "",
+          household_income: profile.household_income || "",
+          baby_budget_monthly: profile.baby_budget_monthly || "",
+          education_level: profile.education_level || "",
+          housing_status: profile.housing_status || "",
+          household_size: profile.household_size || 2,
+          employment_status: profile.employment_status || "",
+          partner_status: profile.partner_status || "",
         }));
       } else {
         // User is authenticated but needs to complete onboarding starting from step 2
@@ -78,7 +93,7 @@ export const OnboardingWizard = () => {
       const stepParam = searchParams.get("step");
       if (stepParam) {
         const step = parseInt(stepParam);
-        if (step >= 1 && step <= 5) {
+        if (step >= 1 && step <= 6) {
           setCurrentStep(step);
         }
       }
@@ -99,6 +114,13 @@ export const OnboardingWizard = () => {
       if (data.lastName) profileUpdate.last_name = data.lastName;
       if (data.phone) profileUpdate.phone = data.phone;
       if (data.zipCode) profileUpdate.zip_code = data.zipCode;
+      if (data.household_income !== undefined) profileUpdate.household_income = data.household_income;
+      if (data.baby_budget_monthly !== undefined) profileUpdate.baby_budget_monthly = data.baby_budget_monthly;
+      if (data.education_level !== undefined) profileUpdate.education_level = data.education_level;
+      if (data.housing_status !== undefined) profileUpdate.housing_status = data.housing_status;
+      if (data.household_size !== undefined) profileUpdate.household_size = data.household_size;
+      if (data.employment_status !== undefined) profileUpdate.employment_status = data.employment_status;
+      if (data.partner_status !== undefined) profileUpdate.partner_status = data.partner_status;
 
       await supabase
         .from("profiles")
@@ -125,6 +147,25 @@ export const OnboardingWizard = () => {
     setFormData(prev => ({ ...prev, ...data }));
     await saveProgress(3, data);
     setCurrentStep(3);
+  };
+
+  const handleStep2_5Complete = async (data: { 
+    household_income: string; 
+    baby_budget_monthly: string; 
+    education_level: string; 
+    housing_status: string; 
+    household_size: number; 
+    employment_status: string; 
+    partner_status: string 
+  }) => {
+    setFormData(prev => ({ ...prev, ...data }));
+    await saveProgress(4, data);
+    setCurrentStep(4);
+  };
+
+  const handleStep2_5Skip = async () => {
+    await saveProgress(4, {});
+    setCurrentStep(4);
   };
 
   const handleStep3Complete = async (data: any) => {
@@ -171,7 +212,7 @@ export const OnboardingWizard = () => {
           throw new Error("Unable to save baby information. Please try again.");
         }
 
-        await saveProgress(4, {});
+        await saveProgress(5, {});
       } catch (error: any) {
         console.error("Error in handleStep3Complete:", error);
         toast.error(error.message || "Failed to save baby information");
@@ -179,10 +220,10 @@ export const OnboardingWizard = () => {
       }
     }
     
-    setCurrentStep(4);
+    setCurrentStep(5);
   };
 
-  const handleStep4Complete = async (data: { interests: string[]; emailNotifications: string[] }) => {
+  const handleStep5Complete = async (data: { interests: string[]; emailNotifications: string[] }) => {
     setFormData(prev => ({ ...prev, ...data }));
     
     // Save preferences
@@ -200,12 +241,12 @@ export const OnboardingWizard = () => {
     
     // Mark onboarding as complete
     await completeOnboarding();
-    setCurrentStep(5);
+    setCurrentStep(6);
   };
 
-  const handleStep4Skip = async () => {
+  const handleStep5Skip = async () => {
     await completeOnboarding();
-    setCurrentStep(5);
+    setCurrentStep(6);
   };
 
   const completeOnboarding = async () => {
@@ -216,7 +257,7 @@ export const OnboardingWizard = () => {
         .from("profiles")
         .update({ 
           onboarding_completed: true,
-          onboarding_step: 5
+          onboarding_step: 6
         })
         .eq("id", userId);
     } catch (error) {
@@ -224,7 +265,7 @@ export const OnboardingWizard = () => {
     }
   };
 
-  const progressPercentage = (currentStep / 5) * 100;
+  const progressPercentage = (currentStep / 6) * 100;
 
   if (loading) {
     return (
@@ -242,10 +283,10 @@ export const OnboardingWizard = () => {
           <Logo size="lg" clickable={false} />
         </div>
 
-        {currentStep < 5 && (
+        {currentStep < 6 && (
           <div className="mb-6 space-y-2">
             <div className="flex justify-between items-center text-sm text-muted-foreground">
-              <span>Step {currentStep} of 5</span>
+              <span>Step {currentStep} of 6</span>
               <span>{Math.round(progressPercentage)}% complete</span>
             </div>
             <Progress value={progressPercentage} className="h-2" />
@@ -274,9 +315,26 @@ export const OnboardingWizard = () => {
           )}
           
           {currentStep === 3 && (
+            <OnboardingStep2_5
+              onNext={handleStep2_5Complete}
+              onBack={() => setCurrentStep(2)}
+              onSkip={handleStep2_5Skip}
+              initialData={{
+                household_income: formData.household_income,
+                baby_budget_monthly: formData.baby_budget_monthly,
+                education_level: formData.education_level,
+                housing_status: formData.housing_status,
+                household_size: formData.household_size,
+                employment_status: formData.employment_status,
+                partner_status: formData.partner_status,
+              }}
+            />
+          )}
+          
+          {currentStep === 4 && (
             <OnboardingStep3
               onNext={handleStep3Complete}
-              onBack={() => setCurrentStep(2)}
+              onBack={() => setCurrentStep(3)}
               initialData={{
                 babyStatus: formData.babyStatus,
                 babyName: formData.babyName,
@@ -290,11 +348,11 @@ export const OnboardingWizard = () => {
             />
           )}
           
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <OnboardingStep4
-              onNext={handleStep4Complete}
-              onBack={() => setCurrentStep(3)}
-              onSkip={handleStep4Skip}
+              onNext={handleStep5Complete}
+              onBack={() => setCurrentStep(4)}
+              onSkip={handleStep5Skip}
               initialData={{
                 interests: formData.interests,
                 emailNotifications: formData.emailNotifications,
@@ -302,7 +360,7 @@ export const OnboardingWizard = () => {
             />
           )}
           
-          {currentStep === 5 && (
+          {currentStep === 6 && (
             <OnboardingStep5
               userData={{
                 firstName: formData.firstName,

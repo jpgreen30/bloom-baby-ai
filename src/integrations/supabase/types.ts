@@ -673,40 +673,61 @@ export type Database = {
       }
       profiles: {
         Row: {
+          baby_budget_monthly: string | null
           created_at: string
           display_name: string | null
+          education_level: string | null
           email: string
+          employment_status: string | null
           first_name: string | null
+          household_income: string | null
+          household_size: number | null
+          housing_status: string | null
           id: string
           last_name: string | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
+          partner_status: string | null
           phone: string | null
           updated_at: string
           zip_code: string | null
         }
         Insert: {
+          baby_budget_monthly?: string | null
           created_at?: string
           display_name?: string | null
+          education_level?: string | null
           email: string
+          employment_status?: string | null
           first_name?: string | null
+          household_income?: string | null
+          household_size?: number | null
+          housing_status?: string | null
           id: string
           last_name?: string | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          partner_status?: string | null
           phone?: string | null
           updated_at?: string
           zip_code?: string | null
         }
         Update: {
+          baby_budget_monthly?: string | null
           created_at?: string
           display_name?: string | null
+          education_level?: string | null
           email?: string
+          employment_status?: string | null
           first_name?: string | null
+          household_income?: string | null
+          household_size?: number | null
+          housing_status?: string | null
           id?: string
           last_name?: string | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          partner_status?: string | null
           phone?: string | null
           updated_at?: string
           zip_code?: string | null
