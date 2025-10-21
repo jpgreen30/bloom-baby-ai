@@ -9,21 +9,23 @@ import AffiliateProductCard from "@/components/AffiliateProductCard";
 import { Sparkles, RefreshCw } from "lucide-react";
 
 interface ProductRecommendationsProps {
+  babyId: string;
   babyName: string;
-  babyAge: string;
+  babyAge?: number;
   isPregnancy?: boolean;
   pregnancyWeek?: number;
-  completedMilestones: string[];
-  upcomingMilestones: string[];
+  completedMilestones?: string[];
+  upcomingMilestones?: string[];
 }
 
 const ProductRecommendations = ({
+  babyId,
   babyName,
   babyAge,
   isPregnancy,
   pregnancyWeek,
-  completedMilestones,
-  upcomingMilestones,
+  completedMilestones = [],
+  upcomingMilestones = [],
 }: ProductRecommendationsProps) => {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

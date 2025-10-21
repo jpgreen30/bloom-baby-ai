@@ -9,6 +9,7 @@ import { ProductCarouselCard } from "@/components/dashboard/feed/ProductCarousel
 import { CommunityFeedCard } from "@/components/dashboard/feed/CommunityFeedCard";
 import { TipNuggetCard } from "@/components/dashboard/feed/TipNuggetCard";
 import { PregnancyDashboard } from "@/components/dashboard/pregnancy/PregnancyDashboard";
+import ProductRecommendations from "@/components/ProductRecommendations";
 
 interface FeedItem {
   id: string;
@@ -340,6 +341,19 @@ export default function Dashboard() {
         aiSummary={aiSummary}
         onClaimFreebie={() => navigate('/premium')}
       />
+
+      {/* Smart Product Recommendations */}
+      {baby && (
+        <div className="w-full max-w-2xl mx-auto px-4 mb-8">
+          <ProductRecommendations 
+            babyId={baby.id}
+            babyAge={baby.birthdate ? Math.floor((new Date().getTime() - new Date(baby.birthdate).getTime()) / (1000 * 60 * 60 * 24 * 7)) : undefined}
+            babyName={baby.name}
+            isPregnancy={baby.is_pregnancy}
+            pregnancyWeek={baby.pregnancy_week}
+          />
+        </div>
+      )}
 
       {/* Infinite Feed */}
       <div className="w-full max-w-2xl mx-auto px-0 md:px-4">
