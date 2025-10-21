@@ -7,6 +7,7 @@ import DesktopSidebar from "./DesktopSidebar";
 import { Bell, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/Logo";
+import ModeToggle from "@/components/ui/ModeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,6 +83,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           </DropdownMenu>
 
           <div className="flex items-center gap-2">
+            <ModeToggle />
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>
@@ -96,7 +98,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
