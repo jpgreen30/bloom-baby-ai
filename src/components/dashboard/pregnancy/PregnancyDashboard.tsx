@@ -4,7 +4,6 @@ import { AIInsightCard } from "./AIInsightCard";
 import { MedicalAlertCard } from "./MedicalAlertCard";
 import { TrimesterMilestoneCard } from "./TrimesterMilestoneCard";
 import { PreparationChecklistCard } from "./PreparationChecklistCard";
-import { ProductCarouselCard } from "../feed/ProductCarouselCard";
 import { TipNuggetCard } from "../feed/TipNuggetCard";
 import { CommunityFeedCard } from "../feed/CommunityFeedCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +11,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PartyPopper } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ProductRecommendations from "@/components/ProductRecommendations";
 
 interface Baby {
   id: string;
@@ -32,7 +32,6 @@ export const PregnancyDashboard = ({ baby, aiSummary }: PregnancyDashboardProps)
   const currentWeek = baby.pregnancy_week || 0;
   const trimester = currentWeek <= 13 ? 1 : currentWeek <= 27 ? 2 : 3;
   
-  const [products, setProducts] = useState<any[]>([]);
   const [tips, setTips] = useState<any[]>([]);
   const [communityPosts, setCommunityPosts] = useState<any[]>([]);
 
@@ -41,17 +40,6 @@ export const PregnancyDashboard = ({ baby, aiSummary }: PregnancyDashboardProps)
   }, [trimester]);
 
   const fetchPregnancyContent = async () => {
-    // Fetch trimester-specific products
-    const { data: productData } = await supabase
-      .from('marketplace_listings')
-      .select('*')
-      .eq('status', 'active')
-      .in('category', ['maternity', 'prenatal', 'pregnancy'])
-      .order('created_at', { ascending: false })
-      .limit(6);
-
-    if (productData) setProducts(productData);
-
     // Fetch pregnancy tips (negative weeks in min_age_weeks)
     const { data: tipsData } = await supabase
       .from('parenting_tips')
@@ -134,15 +122,21 @@ export const PregnancyDashboard = ({ baby, aiSummary }: PregnancyDashboardProps)
           trimester={trimester}
           babyId={baby.id}
         />
+      </div>
 
-        {/* Product Recommendations */}
-        {products.length > 0 && (
-          <div>
-            <h3 className="text-lg font-bold text-foreground mb-3 px-4">Pregnancy Essentials</h3>
-            <ProductCarouselCard products={products} />
-          </div>
-        )}
+      {/* PRIMARY MONETIZATION ZONE - Smart Product Recommendations */}
+      <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 border-y-2 border-primary/10 py-12">
+        <div className="max-w-4xl mx-auto px-4">
+          <ProductRecommendations
+            babyId={baby.id}
+            babyName={baby.name}
+            isPregnancy={true}
+            pregnancyWeek={currentWeek}
+          />
+        </div>
+      </div>
 
+      <div className="max-w-4xl mx-auto px-4 space-y-6 py-6 opacity-90">
         {/* Parenting Tips */}
         {tips.map((tip, idx) => (
           <TipNuggetCard key={idx} tip={tip} />
@@ -152,25 +146,27 @@ export const PregnancyDashboard = ({ baby, aiSummary }: PregnancyDashboardProps)
         {communityPosts.map((post, idx) => (
           <CommunityFeedCard key={idx} post={post} />
         ))}
+      </div>
 
-        {/* Mark Baby Born Button (show in trimester 3) */}
+      {/* Mark Baby Born Button (show in trimester 3) */}
+      <div className="max-w-4xl mx-auto px-4 pb-20">
         {trimester === 3 && currentWeek >= 37 && (
-          <div className="mt-8 p-6 bg-gradient-to-br from-success/10 to-success/5 border-2 border-success/30 rounded-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <PartyPopper className="w-8 h-8 text-success" />
-              <div>
-                <h3 className="text-lg font-bold text-foreground">Baby Arrived?</h3>
-                <p className="text-sm text-muted-foreground">Congratulations! Mark your baby as born to switch to parenting mode.</p>
-              </div>
+        <div className="mt-8 p-6 bg-gradient-to-br from-success/10 to-success/5 border-2 border-success/30 rounded-xl">
+          <div className="flex items-center gap-3 mb-4">
+            <PartyPopper className="w-8 h-8 text-success" />
+            <div>
+              <h3 className="text-lg font-bold text-foreground">Baby Arrived?</h3>
+              <p className="text-sm text-muted-foreground">Congratulations! Mark your baby as born to switch to parenting mode.</p>
             </div>
-            <Button 
-              onClick={handleMarkBabyBorn}
-              className="w-full bg-success hover:bg-success/90 text-white font-semibold"
-            >
-              <PartyPopper className="w-4 h-4 mr-2" />
-              My Baby is Here!
-            </Button>
           </div>
+          <Button 
+            onClick={handleMarkBabyBorn}
+            className="w-full bg-success hover:bg-success/90 text-white font-semibold"
+          >
+            <PartyPopper className="w-4 h-4 mr-2" />
+            My Baby is Here!
+          </Button>
+        </div>
         )}
       </div>
     </div>
