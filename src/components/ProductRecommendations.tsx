@@ -154,74 +154,75 @@ const ProductRecommendations = ({
 
   if (recommendations.length === 0 && !loading) {
     return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                Smart Product Recommendations
-              </CardTitle>
-              <CardDescription>
-                Personalized marketplace picks based on {babyName}'s journey
-              </CardDescription>
-            </div>
-            <Button onClick={() => generateRecommendations(false)} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Generate
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-center py-8">
-            Click "Generate" to get AI-powered product recommendations
+      <div className="text-center py-16 space-y-6">
+        <div className="w-20 h-20 bg-gradient-to-br from-primary via-secondary to-accent rounded-full mx-auto flex items-center justify-center shadow-lg">
+          <Sparkles className="w-10 h-10 text-white" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2">
+            Discover Your Perfect Picks
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Get AI-powered product recommendations curated for {babyName}'s current stage
           </p>
-        </CardContent>
-      </Card>
+        </div>
+        <Button onClick={() => generateRecommendations(false)} size="lg" className="h-14 px-8 text-lg gap-3 shadow-xl hover:shadow-2xl">
+          <Sparkles className="w-6 h-6" />
+          Generate My Recommendations
+        </Button>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Recommended for {babyName}
-            </CardTitle>
-            <CardDescription>
-              {recommendations.length} personalized products
-              {lastUpdated && (
-                <span className="text-xs ml-2 text-muted-foreground">
-                  • Updated {Math.round((new Date().getTime() - lastUpdated.getTime()) / (1000 * 60 * 60))}h ago
-                </span>
-              )}
-              <div className="flex gap-2 mt-2">
-                <Badge variant="outline" className="text-xs">
-                  {recommendations.filter(r => r.source === 'marketplace').length} Marketplace
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {recommendations.filter(r => r.source === 'affiliate').length} Affiliate
-                </Badge>
-              </div>
-            </CardDescription>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Curated Just for {babyName}
+            </h2>
           </div>
-          <Button onClick={() => generateRecommendations(true)} disabled={loading} variant="outline" size="sm">
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <p className="text-muted-foreground text-lg">
+            {isPregnancy && pregnancyWeek ? `Perfect for pregnancy week ${pregnancyWeek}` : babyAge ? `Ideal for ${babyAge} weeks old` : 'Personalized recommendations'}
+            {lastUpdated && ` • Last updated ${Math.round((new Date().getTime() - lastUpdated.getTime()) / (1000 * 60 * 60))}h ago`}
+          </p>
+          <div className="flex gap-2">
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              {recommendations.filter(r => r.source === 'marketplace').length} Marketplace Deals
+            </Badge>
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              {recommendations.filter(r => r.source === 'affiliate').length} Partner Products
+            </Badge>
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Button
+          onClick={() => generateRecommendations(true)}
+          disabled={loading}
+          size="lg"
+          variant="outline"
+          className="gap-2 border-2 border-primary/30 hover:border-primary hover:bg-primary/5 h-12 px-6"
+        >
+          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          Refresh Picks
+        </Button>
+      </div>
+
+      {/* Products Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="space-y-3">
+              <div className="h-72 bg-muted animate-pulse rounded-2xl" />
+              <div className="h-5 bg-muted animate-pulse rounded w-3/4" />
+              <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {recommendations.map((rec) => 
               rec.source === 'marketplace' ? (
                 <RecommendationCard
@@ -245,9 +246,17 @@ const ProductRecommendations = ({
               )
             )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        )
+      }
+      
+      {/* Affiliate Disclosure */}
+      <div className="mt-8 p-5 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl text-center border border-primary/10">
+        <p className="text-sm text-muted-foreground">
+          💝 We may earn a small commission from purchases made through our affiliate links at no extra cost to you. 
+          This helps us provide free personalized recommendations and keep the platform running.
+        </p>
+      </div>
+    </div>
   );
 };
 

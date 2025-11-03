@@ -324,14 +324,6 @@ export default function Dashboard() {
     }
   };
 
-  // Check if pregnancy mode
-  const isPregnancy = baby?.is_pregnancy === true;
-
-  // If pregnancy mode, show pregnancy dashboard
-  if (isPregnancy) {
-    return <PregnancyDashboard baby={baby} aiSummary={aiSummary} />;
-  }
-
   // Otherwise show normal feed
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -339,24 +331,29 @@ export default function Dashboard() {
       <DynamicHeroBanner
         babyName={baby?.name}
         aiSummary={aiSummary}
-        onClaimFreebie={() => navigate('/premium')}
+        onClaimFreebie={() => {
+          toast("Scroll down to discover your personalized product picks!");
+          window.scrollTo({ top: 400, behavior: 'smooth' });
+        }}
       />
 
-      {/* Smart Product Recommendations */}
+      {/* PRIMARY MONETIZATION ZONE - Product Recommendations */}
       {baby && (
-        <div className="w-full max-w-2xl mx-auto px-4 mb-8">
-          <ProductRecommendations 
-            babyId={baby.id}
-            babyAge={baby.birthdate ? Math.floor((new Date().getTime() - new Date(baby.birthdate).getTime()) / (1000 * 60 * 60 * 24 * 7)) : undefined}
-            babyName={baby.name}
-            isPregnancy={baby.is_pregnancy}
-            pregnancyWeek={baby.pregnancy_week}
-          />
+        <div className="w-full bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 py-8 md:py-12 mb-6 border-y-2 border-primary/10">
+          <div className="w-full max-w-7xl mx-auto px-4">
+            <ProductRecommendations 
+              babyId={baby.id}
+              babyAge={baby.birthdate ? Math.floor((new Date().getTime() - new Date(baby.birthdate).getTime()) / (1000 * 60 * 60 * 24 * 7)) : undefined}
+              babyName={baby.name}
+              isPregnancy={baby.is_pregnancy}
+              pregnancyWeek={baby.pregnancy_week}
+            />
+          </div>
         </div>
       )}
 
-      {/* Infinite Feed */}
-      <div className="w-full max-w-2xl mx-auto px-0 md:px-4">
+      {/* Secondary Content Feed */}
+      <div className="w-full max-w-2xl mx-auto px-0 md:px-4 opacity-90">
         {feedItems.map(item => renderFeedCard(item))}
 
         {/* Loader */}
