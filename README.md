@@ -60,14 +60,39 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Running BabyBloom locally
 
-Simply open [Lovable](https://lovable.dev/projects/f4bfaef6-12d5-4eb4-8b06-07e0f8c4a717) and click on Share -> Publish.
+1. Install dependencies
+```bash
+npm install
+npm install --prefix server
+```
 
-## Can I connect a custom domain to my Lovable project?
+2. Configure environment
+```bash
+cp server/.env.example server/.env
+# Edit server/.env if needed (CORS, PORT)
+```
 
-Yes, you can!
+3. Start client and server together
+```bash
+npm run dev:full
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Client runs on `http://localhost:5173`, API server on `http://localhost:4000`.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### API endpoints (server)
+- POST `/auth/register` { email, password }
+- POST `/auth/login` { email, password }
+- POST `/quiz/submit` (JWT required)
+- GET `/milestones/:userId` (JWT required)
+- POST `/milestones/:userId` (JWT required)
+- POST `/milestones/:userId/photo/:id` (multipart, JWT required)
+- GET `/milestones/:userId/export/pdf` (JWT required)
+- GET `/tips/:userId` (JWT required)
+- GET `/me`, PUT `/me/profile` (JWT required)
+
+### Styling & UX
+- Mobile-first, soft pastels (blush pink #F8D7DA, sage green #D4E4BC, light blue #E0F2FE)
+- Bottom nav on mobile: Home, Appts, Shop, Social, Premium
+- Animations via Framer Motion
