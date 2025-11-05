@@ -93,44 +93,63 @@ User Budget Context:
       ? `Pregnancy week ${pregnancyWeek}, expecting parent needs`
       : `Baby age: ${babyAge}. Completed milestones: ${completedMilestones.join(', ')}. Upcoming milestones: ${upcomingMilestones.join(', ')}.`;
 
-    const prompt = `You are a baby product recommendation expert. Analyze the following baby/pregnancy information and available products to provide personalized product recommendations.
+    const productList = [
+      ...(listings?.map(l => ({
+        id: l.id,
+        source: 'marketplace',
+        name: l.title,
+        category: l.category,
+        age_range: l.age_range || 'Not specified',
+        price: l.price,
+        condition: l.condition,
+        description: l.description.substring(0, 100)
+      })) || []),
+      ...(awinProducts?.map(p => ({
+        id: p.id,
+        source: 'affiliate',
+        name: p.product_name,
+        merchant: p.merchant_name,
+        category: p.category || 'Not specified',
+        age_range: p.age_range,
+        brand: p.brand || 'N/A',
+        price: p.price,
+        stock: p.stock_status
+      })) || [])
+    ];
 
-Context: ${context}
-Current season/month: ${currentMonth}
+    const prompt = `Task: Select 12-15 products from the provided list below that are most relevant for this parent.
+
+Parent Context: ${context}
+Season: ${currentMonth}
 ${budgetContext}
 
-INTERNAL MARKETPLACE PRODUCTS (used/secondhand from local sellers):
-${listings?.map(l => `[MARKETPLACE] ID: ${l.id} | ${l.title} | Category: ${l.category} | Age Range: ${l.age_range || 'Not specified'} | Condition: ${l.condition} | Price: $${l.price} | Description: ${l.description.substring(0, 100)}`).join('\n')}
+AVAILABLE PRODUCTS (select from these ONLY):
+${productList.map(p => JSON.stringify(p)).join('\n')}
 
-AFFILIATE PRODUCTS (new items from retailers):
-${awinProducts?.map(p => `[AFFILIATE] ID: ${p.id} | ${p.product_name} | Merchant: ${p.merchant_name} | Category: ${p.category || 'Not specified'} | Age Range: ${p.age_range} | Brand: ${p.brand || 'N/A'} | Price: $${p.price} | Stock: ${p.stock_status}`).join('\n')}
+Selection Guidelines:
+- Prioritize products matching baby's current developmental stage
+- Consider seasonal relevance (month: ${currentMonth})
+- Mix 40% marketplace (used/affordable) + 60% affiliate (new/premium)
+- Lower budget users: prefer marketplace. Higher budget: prefer affiliate
+- Match age_range to baby's age/stage
 
-Provide 12-15 highly relevant product recommendations mixing both sources.
-
-Guidelines:
-1. Consider the baby's developmental stage and upcoming milestones
-2. Consider seasonal appropriateness and urgency
-3. Mix recommendations: 40% marketplace (budget-friendly), 60% affiliate (new items)
-4. For lower income/budget users, prioritize marketplace products
-5. For higher income users, include more affiliate products with premium brands
-6. Match safety requirements for the baby's age
-
-Return ONLY a JSON array with this exact structure:
+Output Format: Return ONLY a valid JSON array (no markdown, no explanations):
 [
   {
-    "product_id": "uuid-here",
-    "source": "marketplace" OR "affiliate",
-    "relevance_score": 95,
-    "reason": "Perfect for tummy time - essential for the rolling over milestone you're approaching.",
+    "product_id": "actual-uuid-from-list",
+    "source": "marketplace",
+    "relevance_score": 92,
+    "reason": "Specific reason why this product is perfect right now.",
     "urgency": "high"
   }
 ]
 
-- product_id: Use the ID from either MARKETPLACE or AFFILIATE list
-- source: MUST be exactly "marketplace" or "affiliate" 
-- relevance_score: 0-100 based on how well it matches needs
-- reason: 1-2 sentences explaining why recommended now
-- urgency: "high" (needed now), "medium" (2-4 weeks), "low" (nice to have)`;
+Rules:
+- product_id MUST be an actual id from the AVAILABLE PRODUCTS list above
+- source MUST be "marketplace" or "affiliate" (matching the product's source)
+- relevance_score: 0-100
+- urgency: "high", "medium", or "low"
+- Output ONLY the JSON array, nothing else`;
 
     // Call Lovable AI
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -142,9 +161,10 @@ Return ONLY a JSON array with this exact structure:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a baby product recommendation expert. Always respond with valid JSON only.' },
+          { role: 'system', content: 'You are a product selection assistant. You MUST respond with ONLY a valid JSON array. No explanations, no markdown formatting, no code blocks. Just the raw JSON array starting with [ and ending with ].' },
           { role: 'user', content: prompt }
         ],
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -167,14 +187,33 @@ Return ONLY a JSON array with this exact structure:
     const aiData = await aiResponse.json();
     const content = aiData.choices[0].message.content;
     
-    // Extract JSON from response (handle markdown code blocks)
+    console.log('AI Response:', content.substring(0, 500));
+    
+    // Extract JSON from response (handle various formats)
     let recommendations;
     try {
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
-      recommendations = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
+      // Try parsing directly first
+      try {
+        recommendations = JSON.parse(content);
+      } catch {
+        // Try extracting JSON from markdown code blocks
+        const jsonMatch = content.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/) || 
+                         content.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          recommendations = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+        } else {
+          throw new Error('No JSON array found in response');
+        }
+      }
+      
+      // Validate it's an array
+      if (!Array.isArray(recommendations)) {
+        throw new Error('Response is not an array');
+      }
     } catch (e) {
       console.error('Failed to parse AI response:', content);
-      throw new Error('Invalid AI response format');
+      console.error('Parse error:', e);
+      throw new Error(`Invalid AI response format: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
 
     // Separate and enrich recommendations by source
